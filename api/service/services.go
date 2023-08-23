@@ -9,9 +9,7 @@ import (
 )
 
 var users []models.Users
-var responsesPost []models.ResponsesPost
 var response models.Response
-var questionReponse []models.QuestionsReponse
 var questions []models.Questions
 
 // fazendo requisição por where email
@@ -74,19 +72,20 @@ func FindUser(ctx *gin.Context) {
 
 func FindDetaisPost(ctx *gin.Context) {
 	id := ctx.Param("id")
+	var questionReponse []models.QuestionsReponse
 
 	configs.DB.Raw("SELECT q.id,q.iduser,q.message, u.first_name, u.last_name FROM questions q INNER JOIN users u on u.id = q.iduser WHERE q.id = ?", id).Scan(&questionReponse)
 
 	response.Status_code = http.StatusOK
 	response.Success = true
-	response.Data = questionReponse
+	response.Data = &questionReponse
 
 	ctx.JSON(http.StatusOK, response)
 }
 
 func FindResponsesPost(ctx *gin.Context) {
 	id := ctx.Param("id")
-
+	var responsesPost []models.ResponsesPost
 	configs.DB.Raw(`select r.idquestion, r.iduser, r.message, u.first_name, u.last_name from responses r 
 	inner join users u on u.id = r.iduser where r.idquestion = ?`, id).Scan(&responsesPost)
 
@@ -99,27 +98,26 @@ func FindResponsesPost(ctx *gin.Context) {
 
 // fazendo requisição pegando todos da tabela
 func FindAll(ctx *gin.Context) {
-	configs.DB.Raw(`SELECT
-	q.id,
-	q.iduser,
-	q.message,
-	u.first_name,
-	u.last_name,
-	COALESCE(COUNT(r.idquestion), 0) AS response
-  FROM
-	questions q
-  INNER JOIN
-	users u ON u.id = q.iduser
-  LEFT JOIN
-	responses r ON r.idquestion = q.id
-  GROUP BY
-	q.id, q.iduser, q.message, u.first_name, u.last_name
-  ORDER BY
-	q.id;
-  `).Scan(&questionReponse)
+	var questionReponse []models.QuestionsReponse
+	configs.DB.Raw(`
+		SELECT
+			q.id,
+			q.iduser,
+			q.message,
+			u.first_name,
+			u.last_name,
+			COALESCE(COUNT(r.idquestion), 0) AS response
+		FROM
+			questions q
+		INNER JOIN users u ON u.id = q.iduser
+		LEFT JOIN responses r ON r.idquestion = q.id
+		WHERE q.deleted_at IS NULL
+		GROUP BY q.id, q.iduser, q.message, u.first_name, u.last_name
+		ORDER BY q.id;
+	`).Scan(&questionReponse)
 	response.Status_code = http.StatusOK
 	response.Success = true
-	response.Data = questionReponse
+	response.Data = &questionReponse
 	ctx.JSON(http.StatusOK, response)
 }
 
@@ -224,5 +222,19 @@ func Delete(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{"success": true, "message": "Successfully deleted user"})
+}
+
+func DeletePost(ctx *gin.Context) {
+	id := ctx.Param("id")
+
+	var res models.Questions
+
+	result := configs.DB.Delete(&res, id)
+	if result.Error != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "InternalServerError"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"success": true, "message": "Successfully deleted post"})
 
 }

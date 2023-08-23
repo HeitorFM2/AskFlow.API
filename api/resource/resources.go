@@ -21,6 +21,7 @@ func AppRoutes(router *gin.Engine) *gin.RouterGroup {
 		v1.POST("/response", service.CreateResponse)
 		v1.PUT("/user/:id", service.UpdateTweet)
 		v1.DELETE("/user/:id", service.Delete)
+		v1.DELETE("/post/:id", service.DeletePost)
 	}
 
 	return v1
