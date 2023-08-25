@@ -216,15 +216,16 @@ func CreateResponse(ctx *gin.Context) {
 func EditEmail(ctx *gin.Context) {
 	id := ctx.Param("id")
 
-	var user struct {
+	type user struct {
 		Email string `json:"email"`
 	}
 
-	if err := ctx.BindJSON(&user); err != nil {
+	var users user
+	if err := ctx.BindJSON(&users); err != nil {
 		return
 	}
 
-	result := configs.DB.Model(&user).Where("id = ?", id).Updates(&user)
+	result := configs.DB.Model(&users).Where("id = ?", id).Updates(&users)
 	if result.Error != nil {
 		response.Status_code = http.StatusInternalServerError
 		response.Success = false
@@ -243,15 +244,16 @@ func EditEmail(ctx *gin.Context) {
 func EditImg(ctx *gin.Context) {
 	id := ctx.Param("id")
 
-	var user struct {
+	type user struct {
 		Img string `json:"img"`
 	}
 
-	if err := ctx.BindJSON(&user); err != nil {
+	var users user
+	if err := ctx.BindJSON(&users); err != nil {
 		return
 	}
 
-	result := configs.DB.Model(&user).Where("id = ?", id).Updates(&user)
+	result := configs.DB.Model(&users).Where("id = ?", id).Updates(&users)
 	if result.Error != nil {
 		response.Status_code = http.StatusInternalServerError
 		response.Success = false
