@@ -34,6 +34,7 @@ type QuestionsReponse struct {
 	First_name string `json:"first_name"`
 	Last_name  string `json:"last_name"`
 	Response   string `json:"response"`
+	Img        string `json:"img"`
 }
 
 type Responses struct {
@@ -50,6 +51,7 @@ type ResponsesPost struct {
 	Message    string `json:"message"`
 	First_name string `json:"first_name"`
 	Last_name  string `json:"last_name"`
+	Img        string `json:"img"`
 }
 
 func HashPassword(password string) string {

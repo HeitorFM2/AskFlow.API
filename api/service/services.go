@@ -3,12 +3,15 @@ package service
 import (
 	"ask-flow/api/models"
 	"ask-flow/configs"
+	"github.com/golang-jwt/jwt/v4"
+	"io"
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
-var users []models.Users
 var response models.Response
 var questions []models.Questions
 
@@ -22,18 +25,30 @@ func Login(ctx *gin.Context) {
 	var getUser models.Users
 	result := configs.DB.Where("email = ?", &user.Email).Find(&getUser)
 
+	response.Status_code = http.StatusInternalServerError
+	response.Success = false
 	if result.Error != nil {
-		response.Status_code = http.StatusInternalServerError
-		response.Success = false
 		response.Message = result.Error.Error()
 		ctx.JSON(http.StatusInternalServerError, response)
 		return
 	}
 
 	if result.RowsAffected == 0 || models.VerifyPassword(getUser.Password, user.Password) != nil {
-		response.Status_code = http.StatusInternalServerError
-		response.Success = false
+
 		response.Message = "Invalid user or password!"
+		ctx.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	var token = jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"exp": time.Now().Add(time.Hour * 24).Unix(),
+		"sub": "getUser",
+	})
+
+	tokenString, err := token.SignedString([]byte(os.Getenv("SECRET")))
+
+	if err != nil {
+		response.Message = "Failed to create token!"
 		ctx.JSON(http.StatusInternalServerError, response)
 		return
 	}
@@ -43,7 +58,10 @@ func Login(ctx *gin.Context) {
 	response.Message = "Login successfully!"
 	response.Data = &getUser
 
-	ctx.JSON(http.StatusOK, response)
+	ctx.JSON(http.StatusOK, gin.H{
+		"data":  response,
+		"token": tokenString,
+	})
 }
 
 func FindUserPost(ctx *gin.Context) {
@@ -86,8 +104,8 @@ func FindDetaisPost(ctx *gin.Context) {
 func FindResponsesPost(ctx *gin.Context) {
 	id := ctx.Param("id")
 	var responsesPost []models.ResponsesPost
-	configs.DB.Raw(`select r.idquestion, r.iduser, r.message, u.first_name, u.last_name from responses r 
-	inner join users u on u.id = r.iduser where r.idquestion = ?`, id).Scan(&responsesPost)
+	configs.DB.Raw(`select r.id, r.idquestion, r.iduser, r.message, u.first_name, u.last_name, u.img from responses r 
+	inner join users u on u.id = r.iduser where r.idquestion = ? order by r.created_at`, id).Scan(&responsesPost)
 
 	response.Status_code = http.StatusOK
 	response.Success = true
@@ -106,13 +124,14 @@ func FindAll(ctx *gin.Context) {
 			q.message,
 			u.first_name,
 			u.last_name,
+			u.img,
 			COALESCE(COUNT(r.idquestion), 0) AS response
 		FROM
 			questions q
 		INNER JOIN users u ON u.id = q.iduser
 		LEFT JOIN responses r ON r.idquestion = q.id
 		WHERE q.deleted_at IS NULL
-		GROUP BY q.id, q.iduser, q.message, u.first_name, u.last_name
+		GROUP BY q.id, q.iduser, q.message, u.first_name, u.last_name, u.img
 		ORDER BY q.id;
 	`).Scan(&questionReponse)
 	response.Status_code = http.StatusOK
@@ -183,7 +202,7 @@ func CreateResponse(ctx *gin.Context) {
 		response.Status_code = http.StatusInternalServerError
 		response.Success = false
 		response.Message = result.Error.Error()
-		ctx.JSON(http.StatusInternalServerError, res)
+		ctx.JSON(http.StatusInternalServerError, response)
 		return
 	}
 
@@ -194,34 +213,80 @@ func CreateResponse(ctx *gin.Context) {
 
 }
 
-func UpdateTweet(ctx *gin.Context) {
-	var user models.Users
+func EditEmail(ctx *gin.Context) {
 	id := ctx.Param("id")
+
+	var user struct {
+		Email string `json:"email"`
+	}
 
 	if err := ctx.BindJSON(&user); err != nil {
 		return
 	}
 
-	result := configs.DB.Model(&user).Where("email = ?", id).Updates(&user)
+	result := configs.DB.Model(&user).Where("id = ?", id).Updates(&user)
 	if result.Error != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "InternalServerError"})
+		response.Status_code = http.StatusInternalServerError
+		response.Success = false
+		response.Message = result.Error.Error()
+		ctx.JSON(http.StatusInternalServerError, response)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, user)
+	response.Status_code = http.StatusOK
+	response.Success = true
+	response.Message = "Email successfully edited!"
+	ctx.JSON(http.StatusOK, response)
 
 }
 
-func Delete(ctx *gin.Context) {
+func EditImg(ctx *gin.Context) {
 	id := ctx.Param("id")
 
-	result := configs.DB.Delete(&users, "email = ?", id)
-	if result.Error != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "InternalServerError"})
+	var user struct {
+		Img string `json:"img"`
+	}
+
+	if err := ctx.BindJSON(&user); err != nil {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"success": true, "message": "Successfully deleted user"})
+	result := configs.DB.Model(&user).Where("id = ?", id).Updates(&user)
+	if result.Error != nil {
+		response.Status_code = http.StatusInternalServerError
+		response.Success = false
+		response.Message = result.Error.Error()
+		ctx.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	response.Status_code = http.StatusOK
+	response.Success = true
+	response.Message = "Img successfully edited!"
+	ctx.JSON(http.StatusOK, response)
+
+}
+
+func DeleteResponse(ctx *gin.Context) {
+	id := ctx.Param("id")
+
+	var res models.Response
+
+	result := configs.DB.Delete(&res, id)
+	if result.Error != nil {
+		response.Status_code = http.StatusInternalServerError
+		response.Success = false
+		response.Message = result.Error.Error()
+		ctx.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	response.Status_code = http.StatusOK
+	response.Success = true
+	response.Message = "Successfully deleted post!"
+
+	ctx.JSON(http.StatusOK, &response)
+
 }
 
 func DeletePost(ctx *gin.Context) {
@@ -231,10 +296,51 @@ func DeletePost(ctx *gin.Context) {
 
 	result := configs.DB.Delete(&res, id)
 	if result.Error != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "InternalServerError"})
+		response.Status_code = http.StatusInternalServerError
+		response.Success = false
+		response.Message = result.Error.Error()
+		ctx.JSON(http.StatusInternalServerError, response)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"success": true, "message": "Successfully deleted post"})
+	response.Status_code = http.StatusOK
+	response.Success = true
+	response.Message = "Successfully deleted post!"
+
+	ctx.JSON(http.StatusOK, &response)
+
+}
+
+func Upload(ctx *gin.Context) {
+	url := "https://api.imgur.com/3/image"
+	method := "POST"
+
+	// Lê o corpo da requisição
+	body := ctx.Request.Body
+
+	client := &http.Client{}
+	req, err := http.NewRequest(method, url, body)
+	if err != nil {
+		ctx.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	req.Header.Add("Authorization", "Client-ID 5f24e4cd127e1ac")
+	req.Header.Set("Content-Type", ctx.Request.Header.Get("Content-Type"))
+
+	res, err := client.Do(req)
+	if err != nil {
+		ctx.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	defer res.Body.Close()
+
+	bodyBytes, err := io.ReadAll(res.Body)
+	if err != nil {
+		ctx.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	ctx.String(http.StatusOK, string(bodyBytes))
 
 }
