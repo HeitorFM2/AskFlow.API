@@ -31,12 +31,11 @@ func Login(ctx *gin.Context) {
 	result := configs.DB.Where("email = ?", &user.Email).Find(&getUser)
 
 	if result.Error != nil {
-		response.Message = result.Error.Error()
 		ctx.JSON(http.StatusInternalServerError, response)
 		return
 	}
 
-	if result.RowsAffected == 0 || models.VerifyPassword(getUser.Password, user.Password) != nil {
+	if models.VerifyPassword(getUser.Password, user.Password) != nil {
 		response.Message = "Invalid user or password!"
 		ctx.JSON(http.StatusInternalServerError, response)
 		return
@@ -170,6 +169,7 @@ func FindAll(ctx *gin.Context) {
 		SELECT
 			q.id,
 			q.iduser,
+			q.created_at,
 			q.message,
 			u.first_name,
 			u.last_name,

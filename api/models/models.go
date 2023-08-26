@@ -3,6 +3,7 @@ package models
 import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
+	"time"
 )
 
 type Response struct {
@@ -29,21 +30,23 @@ type Questions struct {
 }
 
 type QuestionsReponse struct {
-	ID         int    `json:"id"`
-	Iduser     int    `json:"iduser"`
-	Message    string `json:"message"`
-	First_name string `json:"first_name"`
-	Last_name  string `json:"last_name"`
-	Response   string `json:"response"`
-	Img        string `json:"img"`
-	ImgPost    string `json:"imgpost"`
+	ID         int       `json:"id"`
+	CreatedAt  time.Time `json:"create_at"`
+	Iduser     int       `json:"iduser"`
+	Message    string    `json:"message"`
+	First_name string    `json:"first_name"`
+	Last_name  string    `json:"last_name"`
+	Response   string    `json:"response"`
+	Img        string    `json:"img"`
+	ImgPost    string    `json:"imgpost"`
 }
 
 type Responses struct {
-	gorm.Model
-	Idquestion int    `json:"idquestion"`
-	Iduser     int    `json:"iduser"`
-	Message    string `json:"message"`
+	ID         int       `json:"id"`
+	CreatedAt  time.Time `json:"create_at"`
+	Idquestion int       `json:"idquestion"`
+	Iduser     int       `json:"iduser"`
+	Message    string    `json:"message"`
 }
 
 type ResponsesPost struct {
