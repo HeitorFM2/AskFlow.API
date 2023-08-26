@@ -25,16 +25,18 @@ type Questions struct {
 	gorm.Model
 	Iduser  int    `json:"iduser"`
 	Message string `json:"message"`
+	ImgPost string `json:"imgpost"`
 }
 
 type QuestionsReponse struct {
-	gorm.Model
+	ID         int    `json:"id"`
 	Iduser     int    `json:"iduser"`
 	Message    string `json:"message"`
 	First_name string `json:"first_name"`
 	Last_name  string `json:"last_name"`
 	Response   string `json:"response"`
 	Img        string `json:"img"`
+	ImgPost    string `json:"imgpost"`
 }
 
 type Responses struct {
@@ -52,6 +54,7 @@ type ResponsesPost struct {
 	First_name string `json:"first_name"`
 	Last_name  string `json:"last_name"`
 	Img        string `json:"img"`
+	ImgPost    string `json:"imgpost"`
 }
 
 func HashPassword(password string) string {
