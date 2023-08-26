@@ -17,7 +17,7 @@ var response models.Response
 var questions []models.Questions
 
 func init() {
-	response.Status_code = http.StatusInternalServerError
+	response.StatusCode = http.StatusInternalServerError
 	response.Success = false
 	response.Message = "Error"
 }
@@ -55,7 +55,7 @@ func Login(ctx *gin.Context) {
 		return
 	}
 
-	response.Status_code = http.StatusOK
+	response.StatusCode = http.StatusOK
 	response.Success = true
 	response.Message = "Login successfully!"
 	response.Data = &getUser
@@ -76,7 +76,7 @@ func FindUserPost(ctx *gin.Context) {
 		return
 	}
 
-	response.Status_code = http.StatusOK
+	response.StatusCode = http.StatusOK
 	response.Success = true
 	response.Data = questions
 
@@ -93,7 +93,7 @@ func FindUser(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, response)
 	}
 
-	response.Status_code = http.StatusOK
+	response.StatusCode = http.StatusOK
 	response.Success = true
 	response.Data = user
 
@@ -123,7 +123,7 @@ func FindDetaisPost(ctx *gin.Context) {
 	if result.Error != nil {
 		ctx.JSON(http.StatusInternalServerError, response)
 	}
-	response.Status_code = http.StatusOK
+	response.StatusCode = http.StatusOK
 	response.Success = true
 	response.Data = &questionReponse
 
@@ -157,7 +157,7 @@ func FindResponsesPost(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, response)
 	}
 
-	response.Status_code = http.StatusOK
+	response.StatusCode = http.StatusOK
 	response.Success = true
 	response.Data = &responsesPost
 
@@ -189,7 +189,7 @@ func FindAll(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, response)
 	}
 
-	response.Status_code = http.StatusOK
+	response.StatusCode = http.StatusOK
 	response.Success = true
 	response.Data = &questionReponse
 	ctx.JSON(http.StatusOK, response)
@@ -211,7 +211,7 @@ func CreateUser(ctx *gin.Context) {
 		return
 	}
 
-	response.Status_code = http.StatusOK
+	response.StatusCode = http.StatusOK
 	response.Success = true
 	response.Message = "User created successfully!"
 	ctx.JSON(http.StatusOK, response)
@@ -231,7 +231,7 @@ func CreatePost(ctx *gin.Context) {
 		return
 	}
 
-	response.Status_code = http.StatusOK
+	response.StatusCode = http.StatusOK
 	response.Success = true
 	response.Message = "Post created successfully!"
 	response.Data = nil
@@ -252,7 +252,7 @@ func CreateResponse(ctx *gin.Context) {
 		return
 	}
 
-	response.Status_code = http.StatusOK
+	response.StatusCode = http.StatusOK
 	response.Success = true
 	response.Message = "Response created successfully!"
 	response.Data = nil
@@ -278,7 +278,7 @@ func EditEmail(ctx *gin.Context) {
 		return
 	}
 
-	response.Status_code = http.StatusOK
+	response.StatusCode = http.StatusOK
 	response.Success = true
 	response.Message = "Email successfully edited!"
 	ctx.JSON(http.StatusOK, response)
@@ -304,7 +304,7 @@ func EditUsername(ctx *gin.Context) {
 		return
 	}
 
-	response.Status_code = http.StatusOK
+	response.StatusCode = http.StatusOK
 	response.Success = true
 	response.Message = "Email successfully edited!"
 	ctx.JSON(http.StatusOK, response)
@@ -329,7 +329,7 @@ func EditImg(ctx *gin.Context) {
 		return
 	}
 
-	response.Status_code = http.StatusOK
+	response.StatusCode = http.StatusOK
 	response.Success = true
 	response.Message = "Img successfully edited!"
 	ctx.JSON(http.StatusOK, response)
@@ -346,7 +346,7 @@ func DeleteResponse(ctx *gin.Context) {
 		return
 	}
 
-	response.Status_code = http.StatusOK
+	response.StatusCode = http.StatusOK
 	response.Success = true
 	response.Message = "Successfully deleted post!"
 	response.Data = nil
@@ -366,7 +366,7 @@ func DeletePost(ctx *gin.Context) {
 		return
 	}
 
-	response.Status_code = http.StatusOK
+	response.StatusCode = http.StatusOK
 	response.Success = true
 	response.Message = "Successfully deleted post!"
 	response.Data = nil
