@@ -14,45 +14,45 @@ type Response struct {
 
 type Users struct {
 	gorm.Model
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Email     string `json:"email"`
-	Img       string `json:"img"`
-	Password  string `json:"password"`
+	First_name string `json:"first_name"`
+	Last_name  string `json:"last_name"`
+	Email      string `json:"email"`
+	Img        string `json:"img"`
+	Password   string `json:"password"`
 }
 
 type Questions struct {
 	gorm.Model
-	IdUser  int    `json:"iduser"`
+	Iduser  int    `json:"iduser"`
 	Message string `json:"message"`
 	ImgPost string `json:"imgpost"`
 }
 
 type QuestionsReponse struct {
-	ID        int    `json:"id"`
-	IdUser    int    `json:"iduser"`
-	Message   string `json:"message"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Response  string `json:"response"`
-	Img       string `json:"img"`
-	ImgPost   string `json:"imgpost"`
+	ID         int    `json:"id"`
+	Iduser     int    `json:"iduser"`
+	Message    string `json:"message"`
+	First_name string `json:"first_name"`
+	Last_name  string `json:"last_name"`
+	Response   string `json:"response"`
+	Img        string `json:"img"`
+	ImgPost    string `json:"imgpost"`
 }
 
 type Responses struct {
 	gorm.Model
-	IdQuestion int    `json:"idquestion"`
-	IdUser     int    `json:"iduser"`
+	Idquestion int    `json:"idquestion"`
+	Iduser     int    `json:"iduser"`
 	Message    string `json:"message"`
 }
 
 type ResponsesPost struct {
 	gorm.Model
-	IdQuestion int    `json:"idquestion"`
-	IdUser     int    `json:"iduser"`
+	Idquestion int    `json:"idquestion"`
+	Iduser     int    `json:"iduser"`
 	Message    string `json:"message"`
-	FirstName  string `json:"first_name"`
-	LastName   string `json:"last_name"`
+	First_name string `json:"first_name"`
+	Last_name  string `json:"last_name"`
 	Img        string `json:"img"`
 	ImgPost    string `json:"imgpost"`
 }
