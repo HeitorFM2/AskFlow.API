@@ -16,7 +16,11 @@ import (
 var response models.Response
 var questions []models.Questions
 
-// fazendo requisição por where email
+func init() {
+	response.Status_code = http.StatusInternalServerError
+	response.Success = false
+	response.Message = "Error"
+}
 
 func Login(ctx *gin.Context) {
 	var user models.Users
@@ -26,8 +30,6 @@ func Login(ctx *gin.Context) {
 	var getUser models.Users
 	result := configs.DB.Where("email = ?", &user.Email).Find(&getUser)
 
-	response.Status_code = http.StatusInternalServerError
-	response.Success = false
 	if result.Error != nil {
 		response.Message = result.Error.Error()
 		ctx.JSON(http.StatusInternalServerError, response)
@@ -35,7 +37,6 @@ func Login(ctx *gin.Context) {
 	}
 
 	if result.RowsAffected == 0 || models.VerifyPassword(getUser.Password, user.Password) != nil {
-
 		response.Message = "Invalid user or password!"
 		ctx.JSON(http.StatusInternalServerError, response)
 		return
@@ -68,7 +69,12 @@ func Login(ctx *gin.Context) {
 func FindUserPost(ctx *gin.Context) {
 	id := ctx.Param("id")
 
-	configs.DB.Where("iduser = ?", id).Find(&questions)
+	result := configs.DB.Where("iduser = ?", id).Find(&questions)
+
+	if result.Error != nil {
+		ctx.JSON(http.StatusInternalServerError, response)
+		return
+	}
 
 	response.Status_code = http.StatusOK
 	response.Success = true
@@ -80,7 +86,12 @@ func FindUserPost(ctx *gin.Context) {
 func FindUser(ctx *gin.Context) {
 	id := ctx.Param("id")
 	var user models.Users
-	configs.DB.Find(&user, id)
+
+	result := configs.DB.Find(&user, id)
+
+	if result.Error != nil {
+		ctx.JSON(http.StatusInternalServerError, response)
+	}
 
 	response.Status_code = http.StatusOK
 	response.Success = true
@@ -93,7 +104,7 @@ func FindDetaisPost(ctx *gin.Context) {
 	id := ctx.Param("id")
 	var questionReponse []models.QuestionsReponse
 
-	configs.DB.Raw(`
+	result := configs.DB.Raw(`
 		SELECT
 			q.id,
 			q.iduser,
@@ -109,6 +120,9 @@ func FindDetaisPost(ctx *gin.Context) {
 		WHERE
 			q.id = ?;`, id).Scan(&questionReponse)
 
+	if result.Error != nil {
+		ctx.JSON(http.StatusInternalServerError, response)
+	}
 	response.Status_code = http.StatusOK
 	response.Success = true
 	response.Data = &questionReponse
@@ -119,7 +133,7 @@ func FindDetaisPost(ctx *gin.Context) {
 func FindResponsesPost(ctx *gin.Context) {
 	id := ctx.Param("id")
 	var responsesPost []models.ResponsesPost
-	configs.DB.Raw(`
+	result := configs.DB.Raw(`
 		SELECT
 			r.id,
 			r.idquestion,
@@ -139,6 +153,10 @@ func FindResponsesPost(ctx *gin.Context) {
 		ORDER BY
 			r.id DESC;`, id).Scan(&responsesPost)
 
+	if result.Error != nil {
+		ctx.JSON(http.StatusInternalServerError, response)
+	}
+
 	response.Status_code = http.StatusOK
 	response.Success = true
 	response.Data = &responsesPost
@@ -148,7 +166,7 @@ func FindResponsesPost(ctx *gin.Context) {
 
 func FindAll(ctx *gin.Context) {
 	var questionReponse []models.QuestionsReponse
-	configs.DB.Raw(`
+	result := configs.DB.Raw(`
 		SELECT
 			q.id,
 			q.iduser,
@@ -166,6 +184,11 @@ func FindAll(ctx *gin.Context) {
 		GROUP BY q.id, q.iduser, q.message, u.first_name, u.last_name, u.img
 		ORDER BY q.id DESC;
 	`).Scan(&questionReponse)
+
+	if result.Error != nil {
+		ctx.JSON(http.StatusInternalServerError, response)
+	}
+
 	response.Status_code = http.StatusOK
 	response.Success = true
 	response.Data = &questionReponse
@@ -184,9 +207,6 @@ func CreateUser(ctx *gin.Context) {
 
 	result := configs.DB.Create(&user)
 	if result.Error != nil {
-		response.Status_code = http.StatusInternalServerError
-		response.Success = false
-		response.Message = result.Error.Error()
 		ctx.JSON(http.StatusInternalServerError, response)
 		return
 	}
@@ -207,9 +227,6 @@ func CreatePost(ctx *gin.Context) {
 
 	result := configs.DB.Create(&postCreate)
 	if result.Error != nil {
-		response.Status_code = http.StatusInternalServerError
-		response.Success = false
-		response.Message = result.Error.Error()
 		ctx.JSON(http.StatusInternalServerError, response)
 		return
 	}
@@ -231,9 +248,6 @@ func CreateResponse(ctx *gin.Context) {
 
 	result := configs.DB.Create(&res)
 	if result.Error != nil {
-		response.Status_code = http.StatusInternalServerError
-		response.Success = false
-		response.Message = result.Error.Error()
 		ctx.JSON(http.StatusInternalServerError, response)
 		return
 	}
@@ -260,9 +274,6 @@ func EditEmail(ctx *gin.Context) {
 
 	result := configs.DB.Model(&users).Where("id = ?", id).Updates(&users)
 	if result.Error != nil {
-		response.Status_code = http.StatusInternalServerError
-		response.Success = false
-		response.Message = result.Error.Error()
 		ctx.JSON(http.StatusInternalServerError, response)
 		return
 	}
@@ -278,8 +289,8 @@ func EditUsername(ctx *gin.Context) {
 	id := ctx.Param("id")
 
 	type user struct {
-		First_name string `json:"first_name"`
-		Last_name  string `json:"last_name"`
+		FirstName string `json:"first_name"`
+		LastName  string `json:"last_name"`
 	}
 
 	var users user
@@ -289,9 +300,6 @@ func EditUsername(ctx *gin.Context) {
 
 	result := configs.DB.Model(&users).Where("id = ?", id).Updates(&users)
 	if result.Error != nil {
-		response.Status_code = http.StatusInternalServerError
-		response.Success = false
-		response.Message = result.Error.Error()
 		ctx.JSON(http.StatusInternalServerError, response)
 		return
 	}
@@ -317,9 +325,6 @@ func EditImg(ctx *gin.Context) {
 
 	result := configs.DB.Model(&users).Where("id = ?", id).Updates(&users)
 	if result.Error != nil {
-		response.Status_code = http.StatusInternalServerError
-		response.Success = false
-		response.Message = result.Error.Error()
 		ctx.JSON(http.StatusInternalServerError, response)
 		return
 	}
@@ -337,9 +342,6 @@ func DeleteResponse(ctx *gin.Context) {
 
 	result := configs.DB.Delete(&res, &id)
 	if result.Error != nil {
-		response.Status_code = http.StatusInternalServerError
-		response.Success = false
-		response.Message = result.Error.Error()
 		ctx.JSON(http.StatusInternalServerError, response)
 		return
 	}
@@ -360,9 +362,6 @@ func DeletePost(ctx *gin.Context) {
 
 	result := configs.DB.Delete(&res, id)
 	if result.Error != nil {
-		response.Status_code = http.StatusInternalServerError
-		response.Success = false
-		response.Message = result.Error.Error()
 		ctx.JSON(http.StatusInternalServerError, response)
 		return
 	}
