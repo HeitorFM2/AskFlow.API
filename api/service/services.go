@@ -106,6 +106,7 @@ func FindDetaisPost(ctx *gin.Context) {
 	result := configs.DB.Raw(`
 		SELECT
 			q.id,
+			q.created_at,
 			q.iduser,
 			q.message,
 			u.first_name,
