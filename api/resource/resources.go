@@ -21,6 +21,7 @@ func AppRoutes(router *gin.Engine) *gin.RouterGroup {
 		v1.POST("/post", middleware.RequireAuth, service.CreatePost)
 		v1.POST("/response", middleware.RequireAuth, service.CreateResponse)
 		v1.POST("/upload", middleware.RequireAuth, service.UploadHandler)
+		v1.POST("/send/email", service.SendMailSimple)
 		v1.PUT("/email/:id", middleware.RequireAuth, service.EditEmail)
 		v1.PUT("/username/:id", middleware.RequireAuth, service.EditUsername)
 		v1.PUT("/img/:id", middleware.RequireAuth, service.EditImg)

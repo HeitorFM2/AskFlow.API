@@ -57,6 +57,12 @@ type ResponsesPost struct {
 	ImgPost    string `json:"imgpost"`
 }
 
+type Email struct {
+	Name    string `json:"name"`
+	Email   string `json:"email"`
+	Message string `json:"message"`
+}
+
 func HashPassword(password string) string {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {

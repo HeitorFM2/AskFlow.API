@@ -4,13 +4,12 @@ import (
 	"ask-flow/api/models"
 	"ask-flow/api/resource"
 	"ask-flow/configs"
-	"log"
-	"os"
-	"time"
-
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"log"
+	"os"
+	"time"
 )
 
 func init() {
@@ -25,7 +24,7 @@ func main() {
 	app := gin.Default()
 
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"https://askflow-webapp.vercel.app/"},
+		AllowOrigins:     []string{"https://askflows.vercel.app", "https://heitor-melegate.vercel.app"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Content-Type", "Content-Length", "Accept-Encoding", "Authorization", "Cache-Control"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -40,4 +39,5 @@ func main() {
 	configs.DB.AutoMigrate(&models.Questions{})
 
 	app.Run(os.Getenv("APP_PORT"))
+
 }

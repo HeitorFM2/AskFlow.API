@@ -7,6 +7,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"io"
 	"net/http"
+	"net/smtp"
 	"os"
 	"time"
 
@@ -16,7 +17,7 @@ import (
 var response models.Response
 var questions []models.Questions
 
-func init() {
+func resetResponse() {
 	response.StatusCode = http.StatusInternalServerError
 	response.Success = false
 	response.Message = "Error"
@@ -63,6 +64,7 @@ func Login(ctx *gin.Context) {
 		"data":  response,
 		"token": tokenString,
 	})
+	resetResponse()
 }
 
 func FindUserPost(ctx *gin.Context) {
@@ -80,6 +82,7 @@ func FindUserPost(ctx *gin.Context) {
 	response.Data = questions
 
 	ctx.JSON(http.StatusOK, response)
+	resetResponse()
 }
 
 func FindUser(ctx *gin.Context) {
@@ -97,6 +100,7 @@ func FindUser(ctx *gin.Context) {
 	response.Data = user
 
 	ctx.JSON(http.StatusOK, response)
+	resetResponse()
 }
 
 func FindDetaisPost(ctx *gin.Context) {
@@ -128,6 +132,7 @@ func FindDetaisPost(ctx *gin.Context) {
 	response.Data = &questionReponse
 
 	ctx.JSON(http.StatusOK, response)
+	resetResponse()
 }
 
 func FindResponsesPost(ctx *gin.Context) {
@@ -162,6 +167,7 @@ func FindResponsesPost(ctx *gin.Context) {
 	response.Data = &responsesPost
 
 	ctx.JSON(http.StatusOK, response)
+	resetResponse()
 }
 
 func FindAll(ctx *gin.Context) {
@@ -194,6 +200,7 @@ func FindAll(ctx *gin.Context) {
 	response.Success = true
 	response.Data = &questionReponse
 	ctx.JSON(http.StatusOK, response)
+	resetResponse()
 }
 
 func CreateUser(ctx *gin.Context) {
@@ -216,7 +223,7 @@ func CreateUser(ctx *gin.Context) {
 	response.Success = true
 	response.Message = "User created successfully!"
 	ctx.JSON(http.StatusOK, response)
-
+	resetResponse()
 }
 
 func CreatePost(ctx *gin.Context) {
@@ -237,6 +244,7 @@ func CreatePost(ctx *gin.Context) {
 	response.Message = "Post created successfully!"
 	response.Data = nil
 	ctx.JSON(http.StatusOK, response)
+	resetResponse()
 }
 
 func CreateResponse(ctx *gin.Context) {
@@ -258,7 +266,7 @@ func CreateResponse(ctx *gin.Context) {
 	response.Message = "Response created successfully!"
 	response.Data = nil
 	ctx.JSON(http.StatusOK, response)
-
+	resetResponse()
 }
 
 func EditEmail(ctx *gin.Context) {
@@ -283,7 +291,7 @@ func EditEmail(ctx *gin.Context) {
 	response.Success = true
 	response.Message = "Email successfully edited!"
 	ctx.JSON(http.StatusOK, response)
-
+	resetResponse()
 }
 
 func EditUsername(ctx *gin.Context) {
@@ -309,7 +317,7 @@ func EditUsername(ctx *gin.Context) {
 	response.Success = true
 	response.Message = "Email successfully edited!"
 	ctx.JSON(http.StatusOK, response)
-
+	resetResponse()
 }
 
 func EditImg(ctx *gin.Context) {
@@ -334,7 +342,7 @@ func EditImg(ctx *gin.Context) {
 	response.Success = true
 	response.Message = "Img successfully edited!"
 	ctx.JSON(http.StatusOK, response)
-
+	resetResponse()
 }
 
 func DeleteResponse(ctx *gin.Context) {
@@ -353,7 +361,7 @@ func DeleteResponse(ctx *gin.Context) {
 	response.Data = nil
 
 	ctx.JSON(http.StatusOK, &response)
-
+	resetResponse()
 }
 
 func DeletePost(ctx *gin.Context) {
@@ -373,7 +381,7 @@ func DeletePost(ctx *gin.Context) {
 	response.Data = nil
 
 	ctx.JSON(http.StatusOK, &response)
-
+	resetResponse()
 }
 
 func Upload(ctx *gin.Context) string {
@@ -422,4 +430,40 @@ func UploadHandler(ctx *gin.Context) {
 	imgString := Upload(ctx)
 
 	ctx.JSON(http.StatusOK, imgString)
+}
+
+func SendMailSimple(ctx *gin.Context) {
+
+	var emailPost models.Email
+
+	if err := ctx.BindJSON(&emailPost); err != nil {
+		return
+	}
+
+	auth := smtp.PlainAuth(
+		"",
+		"heitorfm.dev@gmail.com",
+		os.Getenv("SECRET_EMAIL"),
+		"smtp.gmail.com",
+	)
+
+	msg := "Subject: " + emailPost.Name + "\nEmail " + emailPost.Email + "\nMessage: " + emailPost.Message
+
+	err := smtp.SendMail(
+		"smtp.gmail.com:587",
+		auth,
+		"heitorfm.dev@gmail.com",
+		[]string{"heitorfm.dev@gmail.com"},
+		[]byte(msg),
+	)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, response)
+	}
+
+	response.StatusCode = http.StatusOK
+	response.Success = true
+	response.Data = nil
+	ctx.JSON(http.StatusOK, response)
+	resetResponse()
 }
