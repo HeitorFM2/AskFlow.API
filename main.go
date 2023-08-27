@@ -1,7 +1,6 @@
 package main
 
 import (
-	"ask-flow/api/models"
 	"ask-flow/api/resource"
 	"ask-flow/configs"
 	"github.com/gin-contrib/cors"
@@ -33,10 +32,6 @@ func main() {
 	}))
 
 	resource.AppRoutes(app)
-
-	configs.DB.AutoMigrate(&models.Responses{})
-	configs.DB.AutoMigrate(&models.Users{})
-	configs.DB.AutoMigrate(&models.Questions{})
 
 	app.Run(os.Getenv("APP_PORT"))
 
