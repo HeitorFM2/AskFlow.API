@@ -5,13 +5,6 @@ import (
 	"gorm.io/gorm"
 )
 
-type Response struct {
-	StatusCode int         `json:"code"`
-	Success    bool        `json:"success"`
-	Message    string      `json:"message"`
-	Data       interface{} `json:"data"`
-}
-
 type Users struct {
 	gorm.Model
 	First_name string `json:"first_name"`

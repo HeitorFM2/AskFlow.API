@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"ask-flow/api/models"
+	"ask-flow/configs"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
@@ -10,11 +11,14 @@ import (
 	"time"
 )
 
-var response models.Response
-
 func RequireAuth(ctx *gin.Context) {
 
 	tokenString := ctx.GetHeader("Authorization")
+
+	if tokenString == "" {
+		ctx.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
 
 	token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -28,12 +32,22 @@ func RequireAuth(ctx *gin.Context) {
 
 		if float64(time.Now().Unix()) > claims["exp"].(float64) {
 			ctx.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+
+		var user models.Users
+		configs.DB.Where("id = ? and email = ?", claims["user"], claims["email"]).First(&user)
+
+		if user.ID == 0 {
+			ctx.AbortWithStatus(http.StatusUnauthorized)
+			return
 		}
 
 		ctx.Next()
 
 	} else {
 		ctx.AbortWithStatus(http.StatusUnauthorized)
+		return
 	}
 
 }

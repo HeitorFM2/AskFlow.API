@@ -4,6 +4,7 @@ import (
 	"ask-flow/api/resource"
 	"ask-flow/configs"
 	"github.com/gin-contrib/cors"
+	limits "github.com/gin-contrib/size"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"log"
@@ -14,7 +15,7 @@ import (
 func init() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loadgin .env file")
+		log.Fatal("Error load gin .env file")
 	}
 	configs.Connection()
 }
@@ -30,6 +31,8 @@ func main() {
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))
+
+	app.Use(limits.RequestSizeLimiter(1024 * 1024))
 
 	resource.AppRoutes(app)
 

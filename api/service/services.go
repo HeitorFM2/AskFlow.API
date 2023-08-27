@@ -4,6 +4,7 @@ import (
 	"ask-flow/api/models"
 	"ask-flow/configs"
 	"encoding/json"
+	"errors"
 	"github.com/golang-jwt/jwt/v4"
 	"io"
 	"net/http"
@@ -14,57 +15,51 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var response models.Response
 var questions []models.Questions
-
-func resetResponse() {
-	response.StatusCode = http.StatusInternalServerError
-	response.Success = false
-	response.Message = "Error"
-}
 
 func Login(ctx *gin.Context) {
 	var user models.Users
 	if err := ctx.BindJSON(&user); err != nil {
 		return
 	}
+
+	if len(user.Password) > 120 || len(user.Email) > 120 {
+		ctx.JSON(http.StatusInternalServerError, models.ResponseError("Email or password exceeded 120 characters!"))
+		return
+	}
+
 	var getUser models.Users
 	result := configs.DB.Where("email = ?", &user.Email).Find(&getUser)
 
 	if result.Error != nil {
-		ctx.JSON(http.StatusInternalServerError, response)
+		ctx.JSON(http.StatusInternalServerError, models.ResponseError("Error"))
 		return
 	}
 
 	if models.VerifyPassword(getUser.Password, user.Password) != nil {
-		response.Message = "Invalid user or password!"
-		ctx.JSON(http.StatusInternalServerError, response)
+		ctx.JSON(http.StatusInternalServerError, models.ResponseError("Invalid user or password!"))
 		return
 	}
 
 	var token = jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"exp": time.Now().Add(time.Hour * 24).Unix(),
-		"sub": "getUser",
+		"exp":   time.Now().Add(time.Hour * 24).Unix(),
+		"user":  getUser.ID,
+		"email": getUser.Email,
 	})
+
+	ctx.Set("UserID", getUser.ID)
 
 	tokenString, err := token.SignedString([]byte(os.Getenv("SECRET")))
 
 	if err != nil {
-		response.Message = "Failed to create token!"
-		ctx.JSON(http.StatusInternalServerError, response)
+		ctx.JSON(http.StatusInternalServerError, models.ResponseError("Failed to create token!"))
 		return
 	}
 
-	response.StatusCode = http.StatusOK
-	response.Success = true
-	response.Message = "Login successfully!"
-	response.Data = &getUser
-
 	ctx.JSON(http.StatusOK, gin.H{
-		"data":  response,
+		"data":  models.ResponseOK(&getUser),
 		"token": tokenString,
 	})
-	resetResponse()
 }
 
 func FindUserPost(ctx *gin.Context) {
@@ -73,16 +68,11 @@ func FindUserPost(ctx *gin.Context) {
 	result := configs.DB.Where("iduser = ?", id).Find(&questions)
 
 	if result.Error != nil {
-		ctx.JSON(http.StatusInternalServerError, response)
+		ctx.JSON(http.StatusInternalServerError, models.ResponseError("Error"))
 		return
 	}
 
-	response.StatusCode = http.StatusOK
-	response.Success = true
-	response.Data = questions
-
-	ctx.JSON(http.StatusOK, response)
-	resetResponse()
+	ctx.JSON(http.StatusOK, models.ResponseOK(&questions))
 }
 
 func FindUser(ctx *gin.Context) {
@@ -92,15 +82,10 @@ func FindUser(ctx *gin.Context) {
 	result := configs.DB.Find(&user, id)
 
 	if result.Error != nil {
-		ctx.JSON(http.StatusInternalServerError, response)
+		ctx.JSON(http.StatusInternalServerError, models.ResponseError("Error"))
 	}
 
-	response.StatusCode = http.StatusOK
-	response.Success = true
-	response.Data = user
-
-	ctx.JSON(http.StatusOK, response)
-	resetResponse()
+	ctx.JSON(http.StatusOK, models.ResponseOK(&user))
 }
 
 func FindDetaisPost(ctx *gin.Context) {
@@ -125,14 +110,10 @@ func FindDetaisPost(ctx *gin.Context) {
 			q.id = ?;`, id).Scan(&questionReponse)
 
 	if result.Error != nil {
-		ctx.JSON(http.StatusInternalServerError, response)
+		ctx.JSON(http.StatusInternalServerError, models.ResponseError("Error"))
 	}
-	response.StatusCode = http.StatusOK
-	response.Success = true
-	response.Data = &questionReponse
 
-	ctx.JSON(http.StatusOK, response)
-	resetResponse()
+	ctx.JSON(http.StatusOK, models.ResponseOK(&questionReponse))
 }
 
 func FindResponsesPost(ctx *gin.Context) {
@@ -159,15 +140,10 @@ func FindResponsesPost(ctx *gin.Context) {
 			r.id DESC;`, id).Scan(&responsesPost)
 
 	if result.Error != nil {
-		ctx.JSON(http.StatusInternalServerError, response)
+		ctx.JSON(http.StatusInternalServerError, models.ResponseError("Error"))
 	}
 
-	response.StatusCode = http.StatusOK
-	response.Success = true
-	response.Data = &responsesPost
-
-	ctx.JSON(http.StatusOK, response)
-	resetResponse()
+	ctx.JSON(http.StatusOK, models.ResponseOK(&responsesPost))
 }
 
 func FindAll(ctx *gin.Context) {
@@ -193,37 +169,42 @@ func FindAll(ctx *gin.Context) {
 	`).Scan(&questionReponse)
 
 	if result.Error != nil {
-		ctx.JSON(http.StatusInternalServerError, response)
+		ctx.JSON(http.StatusInternalServerError, models.ResponseError("Error"))
 	}
 
-	response.StatusCode = http.StatusOK
-	response.Success = true
-	response.Data = &questionReponse
-	ctx.JSON(http.StatusOK, response)
-	resetResponse()
+	ctx.JSON(http.StatusOK, models.ResponseOK(&questionReponse))
 }
 
 func CreateUser(ctx *gin.Context) {
 	var user models.Users
 	if err := ctx.BindJSON(&user); err != nil {
+		ctx.JSON(http.StatusBadRequest, models.ResponseBadRequest("Invalid JSON data"))
 		return
 	}
 
+	if err := validateUserFields(&user); err != nil {
+		ctx.JSON(http.StatusInternalServerError, models.ResponseError(err.Error()))
+		return
+	}
+
+	var getUser models.Users
+	results := configs.DB.Where("email = ?", &user.Email).Find(&getUser)
+
+	if results.RowsAffected > 0 {
+		ctx.JSON(http.StatusInternalServerError, models.ResponseError("Email already registered!"))
+		return
+	}
 	hashedPassword := models.HashPassword(user.Password)
 
 	user.Password = hashedPassword
 
 	result := configs.DB.Create(&user)
 	if result.Error != nil {
-		ctx.JSON(http.StatusInternalServerError, response)
+		ctx.JSON(http.StatusInternalServerError, models.ResponseError("Sorry, there was an error - try again later!"))
 		return
 	}
 
-	response.StatusCode = http.StatusOK
-	response.Success = true
-	response.Message = "User created successfully!"
-	ctx.JSON(http.StatusOK, response)
-	resetResponse()
+	ctx.JSON(http.StatusOK, models.ResponseOK(nil))
 }
 
 func CreatePost(ctx *gin.Context) {
@@ -233,18 +214,17 @@ func CreatePost(ctx *gin.Context) {
 		return
 	}
 
+	if len(postCreate.Message) > 300 {
+		ctx.JSON(http.StatusInternalServerError, models.ResponseError("Message exceeded 300 characters!"))
+		return
+	}
 	result := configs.DB.Create(&postCreate)
 	if result.Error != nil {
-		ctx.JSON(http.StatusInternalServerError, response)
+		ctx.JSON(http.StatusInternalServerError, models.ResponseError("Error"))
 		return
 	}
 
-	response.StatusCode = http.StatusOK
-	response.Success = true
-	response.Message = "Post created successfully!"
-	response.Data = nil
-	ctx.JSON(http.StatusOK, response)
-	resetResponse()
+	ctx.JSON(http.StatusOK, models.ResponseOK(nil))
 }
 
 func CreateResponse(ctx *gin.Context) {
@@ -255,18 +235,18 @@ func CreateResponse(ctx *gin.Context) {
 		return
 	}
 
-	result := configs.DB.Create(&res)
-	if result.Error != nil {
-		ctx.JSON(http.StatusInternalServerError, response)
+	if len(res.Message) > 300 {
+		ctx.JSON(http.StatusInternalServerError, models.ResponseError("Message exceeded 300 characters!"))
 		return
 	}
 
-	response.StatusCode = http.StatusOK
-	response.Success = true
-	response.Message = "Response created successfully!"
-	response.Data = nil
-	ctx.JSON(http.StatusOK, response)
-	resetResponse()
+	result := configs.DB.Create(&res)
+	if result.Error != nil {
+		ctx.JSON(http.StatusInternalServerError, models.ResponseError("Error"))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, models.ResponseOK(nil))
 }
 
 func EditEmail(ctx *gin.Context) {
@@ -281,17 +261,18 @@ func EditEmail(ctx *gin.Context) {
 		return
 	}
 
-	result := configs.DB.Model(&users).Where("id = ?", id).Updates(&users)
-	if result.Error != nil {
-		ctx.JSON(http.StatusInternalServerError, response)
+	if len(users.Email) > 120 {
+		ctx.JSON(http.StatusInternalServerError, models.ResponseError("Email exceeded 120 characters!"))
 		return
 	}
 
-	response.StatusCode = http.StatusOK
-	response.Success = true
-	response.Message = "Email successfully edited!"
-	ctx.JSON(http.StatusOK, response)
-	resetResponse()
+	result := configs.DB.Model(&users).Where("id = ?", id).Updates(&users)
+	if result.Error != nil {
+		ctx.JSON(http.StatusInternalServerError, models.ResponseError("Error"))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, models.ResponseOK(nil))
 }
 
 func EditUsername(ctx *gin.Context) {
@@ -307,17 +288,18 @@ func EditUsername(ctx *gin.Context) {
 		return
 	}
 
-	result := configs.DB.Model(&users).Where("id = ?", id).Updates(&users)
-	if result.Error != nil {
-		ctx.JSON(http.StatusInternalServerError, response)
+	if len(users.FirstName) > 120 || len(users.LastName) > 120 {
+		ctx.JSON(http.StatusInternalServerError, models.ResponseError("First name or last name exceeded 120 characters!"))
 		return
 	}
 
-	response.StatusCode = http.StatusOK
-	response.Success = true
-	response.Message = "Email successfully edited!"
-	ctx.JSON(http.StatusOK, response)
-	resetResponse()
+	result := configs.DB.Model(&users).Where("id = ?", id).Updates(&users)
+	if result.Error != nil {
+		ctx.JSON(http.StatusInternalServerError, models.ResponseError("Error"))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, models.ResponseOK(nil))
 }
 
 func EditImg(ctx *gin.Context) {
@@ -334,15 +316,11 @@ func EditImg(ctx *gin.Context) {
 
 	result := configs.DB.Model(&users).Where("id = ?", id).Updates(&users)
 	if result.Error != nil {
-		ctx.JSON(http.StatusInternalServerError, response)
+		ctx.JSON(http.StatusInternalServerError, models.ResponseError("Error"))
 		return
 	}
 
-	response.StatusCode = http.StatusOK
-	response.Success = true
-	response.Message = "Img successfully edited!"
-	ctx.JSON(http.StatusOK, response)
-	resetResponse()
+	ctx.JSON(http.StatusOK, models.ResponseOK(nil))
 }
 
 func DeleteResponse(ctx *gin.Context) {
@@ -351,17 +329,11 @@ func DeleteResponse(ctx *gin.Context) {
 
 	result := configs.DB.Delete(&res, &id)
 	if result.Error != nil {
-		ctx.JSON(http.StatusInternalServerError, response)
+		ctx.JSON(http.StatusInternalServerError, models.ResponseError("Error"))
 		return
 	}
 
-	response.StatusCode = http.StatusOK
-	response.Success = true
-	response.Message = "Successfully deleted post!"
-	response.Data = nil
-
-	ctx.JSON(http.StatusOK, &response)
-	resetResponse()
+	ctx.JSON(http.StatusOK, models.ResponseOK(nil))
 }
 
 func DeletePost(ctx *gin.Context) {
@@ -371,17 +343,11 @@ func DeletePost(ctx *gin.Context) {
 
 	result := configs.DB.Delete(&res, id)
 	if result.Error != nil {
-		ctx.JSON(http.StatusInternalServerError, response)
+		ctx.JSON(http.StatusInternalServerError, models.ResponseError("Error"))
 		return
 	}
 
-	response.StatusCode = http.StatusOK
-	response.Success = true
-	response.Message = "Successfully deleted post!"
-	response.Data = nil
-
-	ctx.JSON(http.StatusOK, &response)
-	resetResponse()
+	ctx.JSON(http.StatusOK, models.ResponseOK(nil))
 }
 
 func Upload(ctx *gin.Context) string {
@@ -393,7 +359,7 @@ func Upload(ctx *gin.Context) string {
 	client := &http.Client{}
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
-		ctx.String(http.StatusInternalServerError, err.Error())
+		ctx.JSON(http.StatusInternalServerError, models.ResponseError("Error upload image"))
 		return ""
 	}
 
@@ -402,14 +368,14 @@ func Upload(ctx *gin.Context) string {
 
 	res, err := client.Do(req)
 	if err != nil {
-		ctx.String(http.StatusInternalServerError, err.Error())
+		ctx.JSON(http.StatusInternalServerError, models.ResponseError("Error upload image"))
 		return ""
 	}
 	defer res.Body.Close()
 
 	bodyBytes, err := io.ReadAll(res.Body)
 	if err != nil {
-		ctx.String(http.StatusInternalServerError, err.Error())
+		ctx.JSON(http.StatusInternalServerError, models.ResponseError("Error upload image"))
 		return ""
 	}
 
@@ -418,7 +384,7 @@ func Upload(ctx *gin.Context) string {
 
 	data := response["data"].(map[string]interface{})
 	if err != nil {
-		ctx.String(http.StatusInternalServerError, err.Error())
+		ctx.JSON(http.StatusInternalServerError, models.ResponseError("Error upload image"))
 		return ""
 	}
 
@@ -440,6 +406,11 @@ func SendMailSimple(ctx *gin.Context) {
 		return
 	}
 
+	if len(emailPost.Email) > 120 || len(emailPost.Name) > 120 || len(emailPost.Message) > 600 {
+		ctx.JSON(http.StatusInternalServerError, models.ResponseError("Fields exceeded 120 characters!"))
+		return
+	}
+
 	auth := smtp.PlainAuth(
 		"",
 		"heitorfm.dev@gmail.com",
@@ -458,12 +429,21 @@ func SendMailSimple(ctx *gin.Context) {
 	)
 
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, response)
+		ctx.JSON(http.StatusInternalServerError, models.ResponseError("Error send email"))
+		return
 	}
 
-	response.StatusCode = http.StatusOK
-	response.Success = true
-	response.Data = nil
-	ctx.JSON(http.StatusOK, response)
-	resetResponse()
+	ctx.JSON(http.StatusOK, models.ResponseOK(nil))
+}
+
+func validateUserFields(user *models.Users) error {
+	if user.Password == "" || user.Email == "" || user.First_name == "" || user.Last_name == "" {
+		return errors.New("Fill in all the fields!")
+	}
+
+	if len(user.Password) > 120 || len(user.Email) > 120 || len(user.First_name) > 120 || len(user.Last_name) > 120 {
+		return errors.New("Fields exceeded 120 characters!")
+	}
+
+	return nil
 }
