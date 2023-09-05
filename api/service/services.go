@@ -10,16 +10,16 @@ import (
 	"net/http"
 	"net/smtp"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
-var questions []models.Questions
-
 func Login(ctx *gin.Context) {
 	var user models.Users
 	if err := ctx.BindJSON(&user); err != nil {
+		ctx.JSON(http.StatusBadRequest, models.ResponseBadRequest("Body error"))
 		return
 	}
 
@@ -42,7 +42,7 @@ func Login(ctx *gin.Context) {
 	}
 
 	var token = jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"exp":   time.Now().Add(time.Hour * 24).Unix(),
+		"exp":   time.Now().Add(time.Hour * 12).Unix(),
 		"user":  getUser.ID,
 		"email": getUser.Email,
 	})
@@ -63,6 +63,7 @@ func Login(ctx *gin.Context) {
 }
 
 func FindUserPost(ctx *gin.Context) {
+	var questions []models.Questions
 	id := ctx.Param("id")
 
 	result := configs.DB.Where("iduser = ?", id).Find(&questions)
@@ -76,8 +77,13 @@ func FindUserPost(ctx *gin.Context) {
 }
 
 func FindUser(ctx *gin.Context) {
-	id := ctx.Param("id")
 	var user models.Users
+	id := ctx.Param("id")
+
+	if validate(ctx, id) != nil {
+		ctx.JSON(http.StatusUnauthorized, models.ResponseUnauthorized("User unauthorized"))
+		return
+	}
 
 	result := configs.DB.Find(&user, id)
 
@@ -89,8 +95,8 @@ func FindUser(ctx *gin.Context) {
 }
 
 func FindDetaisPost(ctx *gin.Context) {
-	id := ctx.Param("id")
 	var questionReponse []models.QuestionsReponse
+	id := ctx.Param("id")
 
 	result := configs.DB.Raw(`
 		SELECT
@@ -117,8 +123,9 @@ func FindDetaisPost(ctx *gin.Context) {
 }
 
 func FindResponsesPost(ctx *gin.Context) {
-	id := ctx.Param("id")
 	var responsesPost []models.ResponsesPost
+	id := ctx.Param("id")
+
 	result := configs.DB.Raw(`
 		SELECT
 			r.id,
@@ -209,8 +216,13 @@ func CreateUser(ctx *gin.Context) {
 
 func CreatePost(ctx *gin.Context) {
 	var postCreate models.Questions
-
 	if err := ctx.BindJSON(&postCreate); err != nil {
+		ctx.JSON(http.StatusBadRequest, models.ResponseBadRequest("Body error"))
+		return
+	}
+
+	if validate(ctx, strconv.Itoa(postCreate.Iduser)) != nil {
+		ctx.JSON(http.StatusUnauthorized, models.ResponseUnauthorized("User unauthorized"))
 		return
 	}
 
@@ -219,6 +231,7 @@ func CreatePost(ctx *gin.Context) {
 		return
 	}
 	result := configs.DB.Create(&postCreate)
+
 	if result.Error != nil {
 		ctx.JSON(http.StatusInternalServerError, models.ResponseError("Error"))
 		return
@@ -228,10 +241,16 @@ func CreatePost(ctx *gin.Context) {
 }
 
 func CreateResponse(ctx *gin.Context) {
-
+	
 	var res models.Responses
 
 	if err := ctx.BindJSON(&res); err != nil {
+		ctx.JSON(http.StatusBadRequest, models.ResponseBadRequest("Body error"))
+		return
+	}
+
+	if validate(ctx, strconv.Itoa(res.Iduser)) != nil {
+		ctx.JSON(http.StatusUnauthorized, models.ResponseUnauthorized("User unauthorized"))
 		return
 	}
 
@@ -252,12 +271,18 @@ func CreateResponse(ctx *gin.Context) {
 func EditEmail(ctx *gin.Context) {
 	id := ctx.Param("id")
 
+	if validate(ctx, id) != nil {
+		ctx.JSON(http.StatusUnauthorized, models.ResponseUnauthorized("User unauthorized"))
+		return
+	}
+
 	type user struct {
 		Email string `json:"email"`
 	}
 
 	var users user
 	if err := ctx.BindJSON(&users); err != nil {
+		ctx.JSON(http.StatusBadRequest, models.ResponseBadRequest("Body error"))
 		return
 	}
 
@@ -278,6 +303,11 @@ func EditEmail(ctx *gin.Context) {
 func EditUsername(ctx *gin.Context) {
 	id := ctx.Param("id")
 
+	if validate(ctx, id) != nil {
+		ctx.JSON(http.StatusUnauthorized, models.ResponseUnauthorized("User unauthorized"))
+		return
+	}
+
 	type user struct {
 		FirstName string `json:"first_name"`
 		LastName  string `json:"last_name"`
@@ -285,6 +315,7 @@ func EditUsername(ctx *gin.Context) {
 
 	var users user
 	if err := ctx.BindJSON(&users); err != nil {
+		ctx.JSON(http.StatusBadRequest, models.ResponseBadRequest("Body error"))
 		return
 	}
 
@@ -304,6 +335,11 @@ func EditUsername(ctx *gin.Context) {
 
 func EditImg(ctx *gin.Context) {
 	id := ctx.Param("id")
+
+	if validate(ctx, id) != nil {
+		ctx.JSON(http.StatusUnauthorized, models.ResponseUnauthorized("User unauthorized"))
+		return
+	}
 
 	imgString := Upload(ctx)
 
@@ -403,6 +439,7 @@ func SendMailSimple(ctx *gin.Context) {
 	var emailPost models.Email
 
 	if err := ctx.BindJSON(&emailPost); err != nil {
+		ctx.JSON(http.StatusBadRequest, models.ResponseBadRequest("Body error"))
 		return
 	}
 
@@ -443,6 +480,23 @@ func validateUserFields(user *models.Users) error {
 
 	if len(user.Password) > 120 || len(user.Email) > 120 || len(user.First_name) > 120 || len(user.Last_name) > 120 {
 		return errors.New("Fields exceeded 120 characters!")
+	}
+
+	return nil
+}
+
+func validate(ctx *gin.Context, idUser string) error {
+	id, _ := ctx.Get("user")
+
+	idFloat, ok := id.(float64)
+	if !ok {
+		return errors.New("Invalid user")
+	}
+
+	idUserFloat, _ := strconv.ParseFloat(idUser, 64)
+
+	if idFloat != idUserFloat {
+		return errors.New("Invalid user")
 	}
 
 	return nil

@@ -16,7 +16,8 @@ func RequireAuth(ctx *gin.Context) {
 	tokenString := ctx.GetHeader("Authorization")
 
 	if tokenString == "" {
-		ctx.AbortWithStatus(http.StatusUnauthorized)
+		ctx.JSON(http.StatusUnauthorized, models.ResponseUnauthorized("Token is missing!"))
+		ctx.Abort()
 		return
 	}
 
@@ -31,22 +32,27 @@ func RequireAuth(ctx *gin.Context) {
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 
 		if float64(time.Now().Unix()) > claims["exp"].(float64) {
-			ctx.AbortWithStatus(http.StatusUnauthorized)
+			ctx.JSON(http.StatusUnauthorized, models.ResponseUnauthorized("Token has expired!"))
+			ctx.Abort()
 			return
 		}
 
 		var user models.Users
-		configs.DB.Where("id = ? and email = ?", claims["user"], claims["email"]).First(&user)
+		result := configs.DB.Where("id = ?", claims["user"]).First(&user)
 
-		if user.ID == 0 {
-			ctx.AbortWithStatus(http.StatusUnauthorized)
+		if result.RowsAffected == 0 {
+			ctx.JSON(http.StatusUnauthorized, models.ResponseUnauthorized("Invalid token!"))
+			ctx.Abort()
 			return
 		}
+
+		ctx.Set("user", claims["user"])
 
 		ctx.Next()
 
 	} else {
-		ctx.AbortWithStatus(http.StatusUnauthorized)
+		ctx.JSON(http.StatusUnauthorized, models.ResponseUnauthorized("Invalid token!"))
+		ctx.Abort()
 		return
 	}
 
