@@ -35,3 +35,12 @@ func ResponseBadRequest(message string) interface{} {
 
 	return &response
 }
+
+func ResponseUnauthorized(message string) interface{} {
+	var response response
+	response.StatusCode = http.StatusUnauthorized
+	response.Success = true
+	response.Message = message
+
+	return &response
+}
