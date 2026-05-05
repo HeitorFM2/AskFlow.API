@@ -1,4 +1,4 @@
-﻿using AskFlow.Application.User.ViewModels;
+﻿using AskFlow.Application.Users.ViewModels;
 
 namespace AskFlow.Application.Posts.ViewModels
 {

@@ -1,6 +1,8 @@
-﻿using AskFlow.Domain.Interfaces;
+﻿using AskFlow.Application.Auth.Settings;
+using AskFlow.Domain.Interfaces;
 using AskFlow.Infrastructure.Data;
 using AskFlow.Infrastructure.Repositories;
+using AskFlow.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,7 +19,12 @@ namespace AskFlow.Infrastructure
                 options.UseSqlServer(
                     configuration.GetConnectionString("DefaultConnection")));
 
+            services.Configure<JwtSettings>(
+                configuration.GetSection("JwtSettings"));
+
+            services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IPostRepository, PostRepository>();
+            services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
             return services;
         }

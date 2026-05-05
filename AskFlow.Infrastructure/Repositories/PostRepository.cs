@@ -5,14 +5,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AskFlow.Infrastructure.Repositories
 {
-    public class PostRepository : IPostRepository
+    public class PostRepository(AppDbContext context) : IPostRepository
     {
-        private readonly AppDbContext _context;
-
-        public PostRepository(AppDbContext context)
-        {
-            _context = context;
-        }
+        private readonly AppDbContext _context = context;
 
         public IQueryable<Post> GetAll()
         {

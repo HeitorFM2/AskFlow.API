@@ -1,20 +1,17 @@
 ﻿using AskFlow.Application.Posts.Queries;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
 
 namespace AskFlow.WebAPI.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/v2/[controller]")]
-    public class PostsController : ControllerBase
+    public class PostsController(IMediator mediator) : ControllerBase
     {
-        private readonly IMediator _mediator;
-
-        public PostsController(IMediator mediator)
-        {
-            _mediator = mediator;
-        }
+        private readonly IMediator _mediator = mediator;
 
         [HttpGet]
         [EnableQuery]

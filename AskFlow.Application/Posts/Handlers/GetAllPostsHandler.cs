@@ -1,19 +1,14 @@
 ﻿using AskFlow.Application.Posts.Queries;
 using AskFlow.Application.Posts.ViewModels;
-using AskFlow.Application.User.ViewModels;
+using AskFlow.Application.Users.ViewModels;
 using AskFlow.Domain.Interfaces;
 using MediatR;
 
 namespace AskFlow.Application.Posts.Handlers
 {
-    public class GetAllPostsHandler : IRequestHandler<GetAllPostsQuery, IEnumerable<PostsViewModel>>
+    public class GetAllPostsHandler(IPostRepository repository) : IRequestHandler<GetAllPostsQuery, IEnumerable<PostsViewModel>>
     {
-        private readonly IPostRepository _repository;
-
-        public GetAllPostsHandler(IPostRepository repository)
-        {
-            _repository = repository;
-        }
+        private readonly IPostRepository _repository = repository;
 
         public async Task<IEnumerable<PostsViewModel>> Handle(
             GetAllPostsQuery request,
