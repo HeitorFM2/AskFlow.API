@@ -1,12 +1,21 @@
 using AskFlow.Application;
 using AskFlow.Infrastructure;
+using Microsoft.AspNetCore.OData;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddOData(opt => opt
+        .Select()
+        .Filter()
+        .OrderBy()
+        .Expand()
+        .Count()
+        .SetMaxTop(50));
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -30,7 +39,7 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 
-var url = "https://localhost:7221";
+var url = "http://localhost:5251/";
 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
 {
     FileName = url,

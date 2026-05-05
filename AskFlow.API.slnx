@@ -1,1 +1,6 @@
-<Solution />
+<Solution>
+  <Project Path="AskFlow.Application/AskFlow.Application.csproj" />
+  <Project Path="AskFlow.Domain/AskFlow.Domain.csproj" />
+  <Project Path="AskFlow.Infrastructure/AskFlow.Infrastructure.csproj" />
+  <Project Path="AskFlow.WebAPI/AskFlow.WebAPI.csproj" />
+</Solution>

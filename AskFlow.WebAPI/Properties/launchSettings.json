@@ -1,7 +1,7 @@
 ﻿{
   "$schema": "https://json.schemastore.org/launchsettings.json",
   "profiles": {
-    "CleanArchMvc API": {
+    "AskFlow API": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": false,
@@ -10,7 +10,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
-    "CleanArchMvc APIs": {
+    "AskFlow APIs": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": false,
