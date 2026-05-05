@@ -5,21 +5,38 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AskFlow.Infrastructure.Repositories
 {
-    public class PostRepository : IPostRepository
+    public class RefreshTokenRepository : IRefreshTokenRepository
     {
         private readonly AppDbContext _context;
 
-        public PostRepository(AppDbContext context)
+        public RefreshTokenRepository(AppDbContext context)
         {
             _context = context;
         }
 
-        public IQueryable<Post> GetAll()
+        public async Task<RefreshToken?> GetByTokenAsync(string token)
         {
-            return _context.Posts
-                .Include(p => p.User)
-                .Include(p => p.Comments)
-                .Include(p => p.Likes);
+            return await _context.RefreshTokens
+                .Include(r => r.User)
+                .FirstOrDefaultAsync(r => r.Token == token);
+        }
+
+        public async Task AddAsync(RefreshToken refreshToken)
+        {
+            _context.RefreshTokens.Add(refreshToken);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task RevokeAllByUserIdAsync(string userId)
+        {
+            var tokens = await _context.RefreshTokens
+                .Where(r => r.UserId == userId && !r.IsRevoked)
+                .ToListAsync();
+
+            foreach (var token in tokens)
+                token.Revoke();
+
+            await _context.SaveChangesAsync();
         }
     }
 }

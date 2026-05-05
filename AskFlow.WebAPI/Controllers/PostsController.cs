@@ -1,10 +1,12 @@
 ﻿using AskFlow.Application.Posts.Queries;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
 
 namespace AskFlow.WebAPI.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/v2/[controller]")]
     public class PostsController : ControllerBase

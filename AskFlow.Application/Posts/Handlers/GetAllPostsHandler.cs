@@ -1,6 +1,6 @@
 ﻿using AskFlow.Application.Posts.Queries;
 using AskFlow.Application.Posts.ViewModels;
-using AskFlow.Application.User.ViewModels;
+using AskFlow.Application.Users.ViewModels;
 using AskFlow.Domain.Interfaces;
 using MediatR;
 

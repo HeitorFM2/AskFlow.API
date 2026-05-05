@@ -1,4 +1,4 @@
-﻿namespace AskFlow.Application.User.ViewModels
+﻿namespace AskFlow.Application.Users.ViewModels
 {
     public class UserViewModel
     {
