@@ -10,14 +10,9 @@ using System.Text;
 
 namespace AskFlow.Infrastructure.Services
 {
-    public class TokenService : ITokenService
+    public class TokenService(IOptions<JwtSettings> jwtSettings) : ITokenService
     {
-        private readonly JwtSettings _jwtSettings;
-
-        public TokenService(IOptions<JwtSettings> jwtSettings)
-        {
-            _jwtSettings = jwtSettings.Value;
-        }
+        private readonly JwtSettings _jwtSettings = jwtSettings.Value;
 
         public string GenerateAccessToken(User user)
         {
