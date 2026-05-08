@@ -3,7 +3,7 @@
     public class Post
     {
         public int Id { get; set; }
-        public required string Content { get; set; }
+        public string Content { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
 
@@ -11,9 +11,18 @@
         public DateTime? DeletedAt { get; set; }
 
         public string UserId { get; set; } = string.Empty;
-        public required User User { get; set; }
+        public User User { get; set; } = null!;
 
         public ICollection<Comment> Comments { get; set; } = [];
         public ICollection<Like> Likes { get; set; } = [];
+
+        protected Post() { }
+
+        public Post(string content, string userId)
+        {
+            Content = content;
+            UserId = userId;
+            CreatedAt = DateTime.UtcNow;
+        }
     }
 }
