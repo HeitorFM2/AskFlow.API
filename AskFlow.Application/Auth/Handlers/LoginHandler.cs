@@ -1,11 +1,12 @@
-﻿using AskFlow.Application.Auth.Commands;
-using AskFlow.Application.Auth.Settings;
+using AskFlow.Application.Auth.Commands;
 using AskFlow.Application.Auth.ViewModels;
+using AskFlow.Application.Common;
+using AskFlow.Application.Interfaces;
 using AskFlow.Domain.Entities;
 using AskFlow.Domain.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
 
 namespace AskFlow.Application.Auth.Handlers
 {
@@ -13,47 +14,42 @@ namespace AskFlow.Application.Auth.Handlers
         UserManager<User> userManager,
         ITokenService tokenService,
         IRefreshTokenRepository refreshTokenRepository,
-        IOptions<JwtSettings> jwtSettings) : IRequestHandler<LoginCommand, AuthViewModel>
+        ILogger<LoginHandler> logger) : IRequestHandler<LoginCommand, Result<AuthViewModel>>
     {
-        private readonly UserManager<User> _userManager = userManager;
-        private readonly ITokenService _tokenService = tokenService;
-        private readonly IRefreshTokenRepository _refreshTokenRepository = refreshTokenRepository;
-        private readonly JwtSettings _jwtSettings = jwtSettings.Value;
-
-        public async Task<AuthViewModel> Handle(
-            LoginCommand request,
-            CancellationToken cancellationToken)
+        public async Task<Result<AuthViewModel>> Handle(LoginCommand request, CancellationToken cancellationToken)
         {
-            var user = await _userManager.FindByEmailAsync(request.Email)
-                ?? throw new Exception("Email ou senha inválidos.");
+            var user = await userManager.FindByEmailAsync(request.Email);
 
-            var isPasswordValid = await _userManager.CheckPasswordAsync(user, request.Password);
+            if (user is null || !await userManager.CheckPasswordAsync(user, request.Password))
+            {
+                logger.LogWarning("Tentativa de login inválida para {Email}.", request.Email);
+                return Result<AuthViewModel>.Unauthorized("Email ou senha inválidos.");
+            }
 
-            if (!isPasswordValid)
-                throw new Exception("Email ou senha inválidos.");
+            await refreshTokenRepository.RevokeAllByUserIdAsync(user.Id);
 
-            await _refreshTokenRepository.RevokeAllByUserIdAsync(user.Id);
+            var accessToken = tokenService.GenerateAccessToken(user);
+            var refreshToken = tokenService.GenerateRefreshToken();
 
-            var accessToken = _tokenService.GenerateAccessToken(user);
-            var refreshToken = _tokenService.GenerateRefreshToken();
-
-            await _refreshTokenRepository.AddAsync(new RefreshToken(
+            await refreshTokenRepository.AddAsync(new RefreshToken(
                 refreshToken,
                 user,
-                DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpiresInDays)));
+                DateTime.UtcNow.AddDays(tokenService.RefreshTokenExpiresInDays)));
 
-            return new AuthViewModel
+            logger.LogInformation("Usuário {Email} autenticado com sucesso.", request.Email);
+
+            return Result<AuthViewModel>.Success(new AuthViewModel
             {
                 AccessToken = accessToken,
                 RefreshToken = refreshToken,
-                ExpiresAt = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpiresInMinutes),
+                ExpiresAt = tokenService.GetAccessTokenExpiry(),
                 User = new UserAuthViewModel
                 {
                     Id = user.Id,
                     Email = user.Email!,
                     Identification = user.Identification
                 }
-            };
+            });
         }
     }
 }

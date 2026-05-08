@@ -1,4 +1,5 @@
-﻿using AskFlow.Application.Comments.ViewModels;
+using AskFlow.Application.Comments.ViewModels;
+using AskFlow.Application.Common;
 using AskFlow.Application.Posts.Queries;
 using AskFlow.Application.Posts.ViewModels;
 using AskFlow.Application.Users.ViewModels;
@@ -8,18 +9,16 @@ using MediatR;
 
 namespace AskFlow.Application.Posts.Handlers
 {
-    public class GetByIdPostHandler(IPostRepository repository) : IRequestHandler<GetByIdPostQuery, PostViewModel>
+    public class GetByIdPostHandler(IPostRepository repository) : IRequestHandler<GetByIdPostQuery, Result<PostViewModel>>
     {
-        private readonly IPostRepository _repository = repository;
-
-        public async Task<PostViewModel> Handle(
-            GetByIdPostQuery request,
-            CancellationToken cancellationToken)
+        public async Task<Result<PostViewModel>> Handle(GetByIdPostQuery request, CancellationToken cancellationToken)
         {
-            var post = await _repository.GetByIdAsync(request.postId)
-                ?? throw new KeyNotFoundException("Post não encontrado.");
+            var post = await repository.GetByIdAsync(request.postId);
 
-            return MapToViewModel(post);
+            if (post is null)
+                return Result<PostViewModel>.NotFound("Post não encontrado.");
+
+            return Result<PostViewModel>.Success(MapToViewModel(post));
         }
 
         private static PostViewModel MapToViewModel(Post post) => new()
@@ -45,6 +44,5 @@ namespace AskFlow.Application.Posts.Handlers
             UserName = user.UserName ?? string.Empty,
             Identification = user.Identification
         };
-
     }
 }

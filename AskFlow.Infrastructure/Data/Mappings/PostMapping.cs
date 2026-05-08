@@ -1,4 +1,4 @@
-﻿using AskFlow.Domain.Entities;
+using AskFlow.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -16,6 +16,8 @@ namespace AskFlow.Infrastructure.Data.Mappings
 
             builder.Property(p => p.CreatedAt)
                 .IsRequired();
+
+            builder.HasQueryFilter(p => !p.IsDeleted);
 
             builder.HasMany(p => p.Comments)
                 .WithOne(c => c.Post)

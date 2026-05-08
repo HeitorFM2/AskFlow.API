@@ -1,42 +1,42 @@
-﻿using AskFlow.Application.Posts.Command;
+using AskFlow.Application.Common;
+using AskFlow.Application.Posts.Command;
 using AskFlow.Domain.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 
 namespace AskFlow.Application.Posts.Handlers
 {
     public class DeletePostHandler(
         IPostRepository repository,
-        IHttpContextAccessor httpContextAccessor) : IRequestHandler<DeletePostCommand>
+        IHttpContextAccessor httpContextAccessor,
+        ILogger<DeletePostHandler> logger) : IRequestHandler<DeletePostCommand, Result>
     {
-        private readonly IPostRepository _repository = repository;
-
-        public async Task Handle(DeletePostCommand command, CancellationToken cancellationToken)
+        public async Task<Result> Handle(DeletePostCommand command, CancellationToken cancellationToken)
         {
-            using var transaction = await _repository.BeginTransactionAsync();
+            var userId = httpContextAccessor.HttpContext?.User.FindFirst("sub")?.Value
+                ?? httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            try
+            if (string.IsNullOrEmpty(userId))
+                return Result.Unauthorized("Usuário não autenticado.");
+
+            var post = await repository.GetByIdAsync(command.PostId);
+
+            if (post is null)
+                return Result.NotFound("Post não encontrado.");
+
+            if (post.UserId != userId)
             {
-                var userId = httpContextAccessor.HttpContext!.User.FindFirst("sub")?.Value
-                    ?? httpContextAccessor.HttpContext!.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                    ?? throw new UnauthorizedAccessException("Usuário não autenticado.");
-
-                var post = await _repository.GetByIdAsync(command.PostId)
-                    ?? throw new Exception("Post não encontrado.");
-
-                if (post.UserId != userId)
-                    throw new UnauthorizedAccessException("Você não tem permissão para deletar este post.");
-
-                await _repository.DeleteAsync(post);
-
-                await transaction.CommitAsync(cancellationToken);
+                logger.LogWarning("Usuário {UserId} tentou deletar post {PostId} sem permissão.", userId, command.PostId);
+                return Result.Unauthorized("Você não tem permissão para deletar este post.");
             }
-            catch
-            {
-                await transaction.RollbackAsync(cancellationToken);
-                throw;
-            }
+
+            await repository.DeleteAsync(post);
+
+            logger.LogInformation("Post {PostId} deletado pelo usuário {UserId}.", command.PostId, userId);
+
+            return Result.Success();
         }
     }
 }

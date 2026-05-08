@@ -1,4 +1,6 @@
-﻿using AskFlow.Application.Auth.Commands;
+using AskFlow.Application.Auth.Commands;
+using AskFlow.WebAPI.Extensions;
+using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,11 +19,11 @@ namespace AskFlow.WebAPI.Controllers
             try
             {
                 var result = await _mediator.Send(command);
-                return Ok(result);
+                return result.ToActionResult(this);
             }
-            catch (Exception ex)
+            catch (ValidationException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(new { message = string.Join("; ", ex.Errors.Select(e => e.ErrorMessage)) });
             }
         }
 
@@ -31,11 +33,11 @@ namespace AskFlow.WebAPI.Controllers
             try
             {
                 var result = await _mediator.Send(command);
-                return Ok(result);
+                return result.ToActionResult(this);
             }
-            catch (Exception ex)
+            catch (ValidationException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(new { message = string.Join("; ", ex.Errors.Select(e => e.ErrorMessage)) });
             }
         }
 
@@ -45,11 +47,11 @@ namespace AskFlow.WebAPI.Controllers
             try
             {
                 var result = await _mediator.Send(command);
-                return Ok(result);
+                return result.ToActionResult(this);
             }
-            catch (Exception ex)
+            catch (ValidationException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(new { message = string.Join("; ", ex.Errors.Select(e => e.ErrorMessage)) });
             }
         }
 
@@ -63,9 +65,8 @@ namespace AskFlow.WebAPI.Controllers
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
 
-            await _mediator.Send(new LogoutCommand(userId));
-
-            return NoContent();
+            var result = await _mediator.Send(new LogoutCommand(userId));
+            return result.ToActionResult(this);
         }
     }
 }

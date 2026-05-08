@@ -1,42 +1,33 @@
-﻿using AskFlow.Application.Posts.Command;
+using AskFlow.Application.Common;
+using AskFlow.Application.Posts.Command;
 using AskFlow.Domain.Entities;
 using AskFlow.Domain.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 
 namespace AskFlow.Application.Posts.Handlers
 {
     public class CreatePostHandler(
         IPostRepository repository,
-        IHttpContextAccessor httpContextAccessor) : IRequestHandler<CreatePostCommand, int>
+        IHttpContextAccessor httpContextAccessor,
+        ILogger<CreatePostHandler> logger) : IRequestHandler<CreatePostCommand, Result<int>>
     {
-        private readonly IPostRepository _repository = repository;
-
-        public async Task<int> Handle(
-            CreatePostCommand command,
-            CancellationToken cancellationToken)
+        public async Task<Result<int>> Handle(CreatePostCommand command, CancellationToken cancellationToken)
         {
-            using var transaction = await _repository.BeginTransactionAsync();
+            var userId = httpContextAccessor.HttpContext?.User.FindFirst("sub")?.Value
+                ?? httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            try
-            {
-                var userId = httpContextAccessor.HttpContext!.User.FindFirst("sub")?.Value
-                    ?? httpContextAccessor.HttpContext!.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                    ?? throw new UnauthorizedAccessException("Usuário não autenticado.");
+            if (string.IsNullOrEmpty(userId))
+                return Result<int>.Unauthorized("Usuário não autenticado.");
 
-                var post = new Post(command.Content, userId);
-                await _repository.AddAsync(post);
+            var post = new Post(command.Content, userId);
+            await repository.AddAsync(post);
 
-                await transaction.CommitAsync(cancellationToken);
+            logger.LogInformation("Post {PostId} criado pelo usuário {UserId}.", post.Id, userId);
 
-                return post.Id;
-            }
-            catch
-            {
-                await transaction.RollbackAsync(cancellationToken);
-                throw;
-            }
+            return Result<int>.Success(post.Id);
         }
     }
 }
