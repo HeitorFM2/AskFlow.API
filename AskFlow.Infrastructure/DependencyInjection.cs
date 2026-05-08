@@ -1,8 +1,9 @@
-﻿using AskFlow.Application.Auth.Settings;
+using AskFlow.Application.Interfaces;
 using AskFlow.Domain.Interfaces;
 using AskFlow.Infrastructure.Data;
 using AskFlow.Infrastructure.Repositories;
 using AskFlow.Infrastructure.Services;
+using AskFlow.Infrastructure.Settings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

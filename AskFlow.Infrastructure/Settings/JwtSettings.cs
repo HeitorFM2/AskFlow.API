@@ -1,4 +1,4 @@
-﻿namespace AskFlow.Application.Auth.Settings
+namespace AskFlow.Infrastructure.Settings
 {
     public class JwtSettings
     {

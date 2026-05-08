@@ -1,11 +1,12 @@
-﻿using AskFlow.Application.Auth.Commands;
-using AskFlow.Application.Auth.Settings;
+using AskFlow.Application.Auth.Commands;
 using AskFlow.Application.Auth.ViewModels;
+using AskFlow.Application.Common;
+using AskFlow.Application.Interfaces;
 using AskFlow.Domain.Entities;
 using AskFlow.Domain.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
 
 namespace AskFlow.Application.Auth.Handlers
 {
@@ -13,16 +14,9 @@ namespace AskFlow.Application.Auth.Handlers
         UserManager<User> userManager,
         ITokenService tokenService,
         IRefreshTokenRepository refreshTokenRepository,
-        IOptions<JwtSettings> jwtSettings) : IRequestHandler<RegisterCommand, AuthViewModel>
+        ILogger<RegisterHandler> logger) : IRequestHandler<RegisterCommand, Result<AuthViewModel>>
     {
-        private readonly UserManager<User> _userManager = userManager;
-        private readonly ITokenService _tokenService = tokenService;
-        private readonly IRefreshTokenRepository _refreshTokenRepository = refreshTokenRepository;
-        private readonly JwtSettings _jwtSettings = jwtSettings.Value;
-
-        public async Task<AuthViewModel> Handle(
-            RegisterCommand request,
-            CancellationToken cancellationToken)
+        public async Task<Result<AuthViewModel>> Handle(RegisterCommand request, CancellationToken cancellationToken)
         {
             var user = new User
             {
@@ -32,34 +26,37 @@ namespace AskFlow.Application.Auth.Handlers
                 CreatedAt = DateTime.UtcNow
             };
 
-            var result = await _userManager.CreateAsync(user, request.Password);
+            var identityResult = await userManager.CreateAsync(user, request.Password);
 
-            if (!result.Succeeded)
+            if (!identityResult.Succeeded)
             {
-                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-                throw new Exception(errors);
+                var errors = string.Join(", ", identityResult.Errors.Select(e => e.Description));
+                logger.LogWarning("Falha ao registrar usuário {Email}: {Errors}", request.Email, errors);
+                return Result<AuthViewModel>.Invalid(errors);
             }
 
-            var accessToken = _tokenService.GenerateAccessToken(user);
-            var refreshToken = _tokenService.GenerateRefreshToken();
+            var accessToken = tokenService.GenerateAccessToken(user);
+            var refreshToken = tokenService.GenerateRefreshToken();
 
-            await _refreshTokenRepository.AddAsync(new RefreshToken(
+            await refreshTokenRepository.AddAsync(new RefreshToken(
                 refreshToken,
                 user,
-                DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpiresInDays)));
+                DateTime.UtcNow.AddDays(tokenService.RefreshTokenExpiresInDays)));
 
-            return new AuthViewModel
+            logger.LogInformation("Usuário {Email} registrado com sucesso.", request.Email);
+
+            return Result<AuthViewModel>.Success(new AuthViewModel
             {
                 AccessToken = accessToken,
                 RefreshToken = refreshToken,
-                ExpiresAt = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpiresInMinutes),
+                ExpiresAt = tokenService.GetAccessTokenExpiry(),
                 User = new UserAuthViewModel
                 {
                     Id = user.Id,
                     Email = user.Email!,
                     Identification = user.Identification
                 }
-            };
+            });
         }
     }
 }

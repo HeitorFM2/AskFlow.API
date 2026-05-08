@@ -1,6 +1,6 @@
-﻿using AskFlow.Application.Auth.Settings;
+using AskFlow.Application.Interfaces;
 using AskFlow.Domain.Entities;
-using AskFlow.Domain.Interfaces;
+using AskFlow.Infrastructure.Settings;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -13,6 +13,10 @@ namespace AskFlow.Infrastructure.Services
     public class TokenService(IOptions<JwtSettings> jwtSettings) : ITokenService
     {
         private readonly JwtSettings _jwtSettings = jwtSettings.Value;
+
+        public int RefreshTokenExpiresInDays => _jwtSettings.RefreshTokenExpiresInDays;
+
+        public DateTime GetAccessTokenExpiry() => DateTime.UtcNow.AddMinutes(_jwtSettings.ExpiresInMinutes);
 
         public string GenerateAccessToken(User user)
         {

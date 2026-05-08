@@ -1,8 +1,7 @@
-﻿using AskFlow.Domain.Entities;
+using AskFlow.Domain.Entities;
 using AskFlow.Domain.Interfaces;
 using AskFlow.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
 
 namespace AskFlow.Infrastructure.Repositories
 {
@@ -10,26 +9,29 @@ namespace AskFlow.Infrastructure.Repositories
     {
         private readonly AppDbContext _context = context;
 
-        public async Task<IDbContextTransaction> BeginTransactionAsync()
+        public async Task<IReadOnlyList<Post>> GetAllAsync(int page, int pageSize, CancellationToken cancellationToken = default)
         {
-            return await _context.Database.BeginTransactionAsync();
+            return await _context.Posts
+                .Include(p => p.User)
+                .Include(p => p.Comments).ThenInclude(c => c.User)
+                .Include(p => p.Likes)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(cancellationToken);
         }
 
-        public IQueryable<Post> GetAll()
+        public async Task<int> CountAsync(CancellationToken cancellationToken = default)
         {
-            return _context.Posts
-                .Include(p => p.User)
-                .Include(p => p.Comments)
-                .Include(p => p.Likes);
+            return await _context.Posts.CountAsync(cancellationToken);
         }
 
         public async Task<Post?> GetByIdAsync(int id)
         {
             return await _context.Posts
                 .Include(p => p.User)
-                .Include(p => p.Comments)
+                .Include(p => p.Comments).ThenInclude(c => c.User)
                 .Include(p => p.Likes)
-                .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
+                .FirstOrDefaultAsync(p => p.Id == id);
         }
 
         public async Task AddAsync(Post post)
