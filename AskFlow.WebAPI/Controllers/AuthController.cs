@@ -11,7 +11,7 @@ namespace AskFlow.WebAPI.Controllers
     {
         private readonly IMediator _mediator = mediator;
 
-        [HttpPost("register")]
+        [HttpPost("Register")]
         public async Task<IActionResult> Register([FromBody] RegisterCommand command)
         {
             try
@@ -25,7 +25,7 @@ namespace AskFlow.WebAPI.Controllers
             }
         }
 
-        [HttpPost("login")]
+        [HttpPost("Login")]
         public async Task<IActionResult> Login([FromBody] LoginCommand command)
         {
             try
@@ -39,7 +39,7 @@ namespace AskFlow.WebAPI.Controllers
             }
         }
 
-        [HttpPost("refresh-token")]
+        [HttpPost("RefreshToken")]
         public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenCommand command)
         {
             try
@@ -54,7 +54,7 @@ namespace AskFlow.WebAPI.Controllers
         }
 
         [Authorize]
-        [HttpPost("logout")]
+        [HttpPost("Logout")]
         public async Task<IActionResult> Logout()
         {
             var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
