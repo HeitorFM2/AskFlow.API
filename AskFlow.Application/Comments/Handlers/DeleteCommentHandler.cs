@@ -17,14 +17,14 @@ namespace AskFlow.Application.Comments.Handlers
                 ?? httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (string.IsNullOrEmpty(userId))
-                return Result.Unauthorized("Usuário não autenticado.");
+                return Result.Unauthorized(ErrorCodes.UserNotAuthenticated, "User not authenticated.");
 
             var comment = await repository.GetByIdAsync(command.CommentId, cancellationToken);
             if (comment is null)
-                return Result.NotFound("Comentário não encontrado.");
+                return Result.NotFound(ErrorCodes.CommentNotFound, "Comment not found.");
 
             if (comment.UserId != userId)
-                return Result.Unauthorized("Sem permissão para deletar este comentário.");
+                return Result.Unauthorized(ErrorCodes.CommentNoPermissionToDelete, "No permission to delete this comment.");
 
             await repository.DeleteAsync(comment, cancellationToken);
             return Result.Success();

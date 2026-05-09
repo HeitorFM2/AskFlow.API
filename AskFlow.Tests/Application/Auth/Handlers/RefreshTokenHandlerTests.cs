@@ -25,7 +25,7 @@ namespace AskFlow.Tests.Application.Auth.Handlers
             var result = await CreateSut().Handle(new RefreshTokenCommand("missing"), default);
 
             result.Type.Should().Be(ResultType.Unauthorized);
-            result.Error.Should().Be("Refresh token inválido.");
+            result.ErrorCode.Should().Be(ErrorCodes.AuthRefreshTokenInvalid);
         }
 
         [Fact]
@@ -37,7 +37,7 @@ namespace AskFlow.Tests.Application.Auth.Handlers
             var result = await CreateSut().Handle(new RefreshTokenCommand("x"), default);
 
             result.Type.Should().Be(ResultType.Unauthorized);
-            result.Error.Should().Be("Refresh token expirado ou revogado.");
+            result.ErrorCode.Should().Be(ErrorCodes.AuthRefreshTokenExpiredOrRevoked);
         }
 
         [Fact]

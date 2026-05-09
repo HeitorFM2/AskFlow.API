@@ -1,3 +1,4 @@
+using AskFlow.Application.Common;
 using FluentValidation;
 
 namespace AskFlow.Application.Auth.Commands
@@ -7,16 +8,16 @@ namespace AskFlow.Application.Auth.Commands
         public RegisterCommandValidator()
         {
             RuleFor(x => x.Email)
-                .NotEmpty().WithMessage("Email é obrigatório.")
-                .EmailAddress().WithMessage("Email inválido.");
+                .NotEmpty().WithErrorCode(ErrorCodes.EmailRequired).WithMessage("Email is required.")
+                .EmailAddress().WithErrorCode(ErrorCodes.EmailInvalid).WithMessage("Invalid email.");
 
             RuleFor(x => x.Password)
-                .NotEmpty().WithMessage("Senha é obrigatória.")
-                .MinimumLength(6).WithMessage("Senha deve ter pelo menos 6 caracteres.");
+                .NotEmpty().WithErrorCode(ErrorCodes.PasswordRequired).WithMessage("Password is required.")
+                .MinimumLength(6).WithErrorCode(ErrorCodes.PasswordMinLength).WithMessage("Password must be at least 6 characters long.");
 
             RuleFor(x => x.Identification)
-                .NotEmpty().WithMessage("Identificação é obrigatória.")
-                .MaximumLength(50).WithMessage("Identificação deve ter no máximo 50 caracteres.");
+                .NotEmpty().WithErrorCode(ErrorCodes.IdentificationRequired).WithMessage("Identification is required.")
+                .MaximumLength(50).WithErrorCode(ErrorCodes.IdentificationMaxLength).WithMessage("Identification must be at most 50 characters.");
         }
     }
 }

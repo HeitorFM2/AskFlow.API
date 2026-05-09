@@ -22,8 +22,8 @@ namespace AskFlow.Application.Auth.Handlers
 
             if (user is null || !await userManager.CheckPasswordAsync(user, request.Password))
             {
-                logger.LogWarning("Tentativa de login inválida para {Email}.", request.Email);
-                return Result<AuthViewModel>.Unauthorized("Email ou senha inválidos.");
+                logger.LogWarning("Invalid login attempt for {Email}.", request.Email);
+                return Result<AuthViewModel>.Unauthorized(ErrorCodes.AuthInvalidCredentials, "Invalid email or password.");
             }
 
             await refreshTokenRepository.RevokeAllByUserIdAsync(user.Id);
@@ -36,7 +36,7 @@ namespace AskFlow.Application.Auth.Handlers
                 user,
                 DateTime.UtcNow.AddDays(tokenService.RefreshTokenExpiresInDays)));
 
-            logger.LogInformation("Usuário {Email} autenticado com sucesso.", request.Email);
+            logger.LogInformation("User {Email} authenticated successfully.", request.Email);
 
             return Result<AuthViewModel>.Success(new AuthViewModel
             {

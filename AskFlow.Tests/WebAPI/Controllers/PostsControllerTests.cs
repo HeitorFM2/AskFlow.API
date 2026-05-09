@@ -46,7 +46,7 @@ namespace AskFlow.Tests.WebAPI.Controllers
         public async Task GetById_NotFound_ShouldReturnNotFound()
         {
             _mediator.Send(Arg.Any<GetByIdPostQuery>(), Arg.Any<CancellationToken>())
-                .Returns(Result<PostViewModel>.NotFound("não achou"));
+                .Returns(Result<PostViewModel>.NotFound(ErrorCodes.PostNotFound, "Post not found."));
 
             var action = await CreateSut().GetById(1);
 
@@ -70,7 +70,7 @@ namespace AskFlow.Tests.WebAPI.Controllers
         public async Task CreatePost_OnFailure_ShouldReturnMappedActionResult()
         {
             _mediator.Send(Arg.Any<CreatePostCommand>(), Arg.Any<CancellationToken>())
-                .Returns(Result<int>.Unauthorized("nope"));
+                .Returns(Result<int>.Unauthorized(ErrorCodes.UserNotAuthenticated, "User not authenticated."));
 
             var action = await CreateSut().CreatePost(new CreatePostCommand("texto"));
 

@@ -31,8 +31,8 @@ namespace AskFlow.Application.Auth.Handlers
             if (!identityResult.Succeeded)
             {
                 var errors = string.Join(", ", identityResult.Errors.Select(e => e.Description));
-                logger.LogWarning("Falha ao registrar usuário {Email}: {Errors}", request.Email, errors);
-                return Result<AuthViewModel>.Invalid(errors);
+                logger.LogWarning("Failed to register user {Email}: {Errors}", request.Email, errors);
+                return Result<AuthViewModel>.Invalid(ErrorCodes.AuthIdentityFailure, errors);
             }
 
             var accessToken = tokenService.GenerateAccessToken(user);
@@ -43,7 +43,7 @@ namespace AskFlow.Application.Auth.Handlers
                 user,
                 DateTime.UtcNow.AddDays(tokenService.RefreshTokenExpiresInDays)));
 
-            logger.LogInformation("Usuário {Email} registrado com sucesso.", request.Email);
+            logger.LogInformation("User {Email} registered successfully.", request.Email);
 
             return Result<AuthViewModel>.Success(new AuthViewModel
             {

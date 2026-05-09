@@ -21,6 +21,7 @@ namespace AskFlow.Tests.Application.Posts.Handlers
             var result = await sut.Handle(new CreatePostCommand("texto"), default);
 
             result.Type.Should().Be(ResultType.Unauthorized);
+            result.ErrorCode.Should().Be(ErrorCodes.UserNotAuthenticated);
             await _repository.DidNotReceive().AddAsync(Arg.Any<Post>());
         }
 

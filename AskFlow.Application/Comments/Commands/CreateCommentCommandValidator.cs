@@ -1,3 +1,4 @@
+using AskFlow.Application.Common;
 using FluentValidation;
 
 namespace AskFlow.Application.Comments.Commands
@@ -7,11 +8,11 @@ namespace AskFlow.Application.Comments.Commands
         public CreateCommentCommandValidator()
         {
             RuleFor(x => x.PostId)
-                .GreaterThan(0).WithMessage("Post inválido.");
+                .GreaterThan(0).WithErrorCode(ErrorCodes.CommentPostIdInvalid).WithMessage("Invalid post.");
 
             RuleFor(x => x.Content)
-                .NotEmpty().WithMessage("Conteúdo é obrigatório.")
-                .MaximumLength(500).WithMessage("Conteúdo deve ter no máximo 500 caracteres.");
+                .NotEmpty().WithErrorCode(ErrorCodes.CommentContentRequired).WithMessage("Content is required.")
+                .MaximumLength(500).WithErrorCode(ErrorCodes.CommentContentMaxLength).WithMessage("Content must be at most 500 characters.");
         }
     }
 }

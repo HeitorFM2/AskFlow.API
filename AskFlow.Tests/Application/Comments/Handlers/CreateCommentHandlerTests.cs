@@ -23,6 +23,7 @@ namespace AskFlow.Tests.Application.Comments.Handlers
             var result = await sut.Handle(new CreateCommentCommand(1, "x"), default);
 
             result.Type.Should().Be(ResultType.Unauthorized);
+            result.ErrorCode.Should().Be(ErrorCodes.UserNotAuthenticated);
         }
 
         [Fact]
@@ -34,7 +35,7 @@ namespace AskFlow.Tests.Application.Comments.Handlers
             var result = await sut.Handle(new CreateCommentCommand(1, "x"), default);
 
             result.Type.Should().Be(ResultType.NotFound);
-            result.Error.Should().Be("Post não encontrado.");
+            result.ErrorCode.Should().Be(ErrorCodes.PostNotFound);
         }
 
         [Fact]
@@ -48,7 +49,7 @@ namespace AskFlow.Tests.Application.Comments.Handlers
             var result = await sut.Handle(new CreateCommentCommand(1, "x", ParentCommentId: 99), default);
 
             result.Type.Should().Be(ResultType.NotFound);
-            result.Error.Should().Be("Comentário pai não encontrado.");
+            result.ErrorCode.Should().Be(ErrorCodes.CommentParentNotFound);
         }
 
         [Fact]

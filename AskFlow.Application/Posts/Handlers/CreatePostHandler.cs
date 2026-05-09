@@ -20,12 +20,12 @@ namespace AskFlow.Application.Posts.Handlers
                 ?? httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (string.IsNullOrEmpty(userId))
-                return Result<int>.Unauthorized("Usuário não autenticado.");
+                return Result<int>.Unauthorized(ErrorCodes.UserNotAuthenticated, "User not authenticated.");
 
             var post = new Post(command.Content, userId);
             await repository.AddAsync(post);
 
-            logger.LogInformation("Post {PostId} criado pelo usuário {UserId}.", post.Id, userId);
+            logger.LogInformation("Post {PostId} created by user {UserId}.", post.Id, userId);
 
             return Result<int>.Success(post.Id);
         }

@@ -19,22 +19,22 @@ namespace AskFlow.Application.Posts.Handlers
                 ?? httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (string.IsNullOrEmpty(userId))
-                return Result.Unauthorized("Usuário não autenticado.");
+                return Result.Unauthorized(ErrorCodes.UserNotAuthenticated, "User not authenticated.");
 
             var post = await repository.GetByIdAsync(command.PostId);
 
             if (post is null)
-                return Result.NotFound("Post não encontrado.");
+                return Result.NotFound(ErrorCodes.PostNotFound, "Post not found.");
 
             if (post.UserId != userId)
             {
-                logger.LogWarning("Usuário {UserId} tentou deletar post {PostId} sem permissão.", userId, command.PostId);
-                return Result.Unauthorized("Você não tem permissão para deletar este post.");
+                logger.LogWarning("User {UserId} attempted to delete post {PostId} without permission.", userId, command.PostId);
+                return Result.Unauthorized(ErrorCodes.PostNoPermissionToDelete, "You do not have permission to delete this post.");
             }
 
             await repository.DeleteAsync(post);
 
-            logger.LogInformation("Post {PostId} deletado pelo usuário {UserId}.", command.PostId, userId);
+            logger.LogInformation("Post {PostId} deleted by user {UserId}.", command.PostId, userId);
 
             return Result.Success();
         }

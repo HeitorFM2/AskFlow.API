@@ -1,4 +1,5 @@
 using AskFlow.Application.Common;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AskFlow.WebAPI.Extensions
@@ -10,10 +11,10 @@ namespace AskFlow.WebAPI.Extensions
             return result.Type switch
             {
                 ResultType.Ok => controller.Ok(result.Value),
-                ResultType.NotFound => controller.NotFound(new { message = result.Error }),
-                ResultType.Unauthorized => controller.Unauthorized(new { message = result.Error }),
-                ResultType.Invalid => controller.BadRequest(new { message = result.Error }),
-                _ => controller.StatusCode(500, new { message = result.Error })
+                ResultType.NotFound => controller.NotFound(BuildErrorBody(result)),
+                ResultType.Unauthorized => controller.Unauthorized(BuildErrorBody(result)),
+                ResultType.Invalid => controller.BadRequest(BuildErrorBody(result)),
+                _ => controller.StatusCode(500, BuildErrorBody(result))
             };
         }
 
@@ -22,11 +23,34 @@ namespace AskFlow.WebAPI.Extensions
             return result.Type switch
             {
                 ResultType.Ok => controller.NoContent(),
-                ResultType.NotFound => controller.NotFound(new { message = result.Error }),
-                ResultType.Unauthorized => controller.Unauthorized(new { message = result.Error }),
-                ResultType.Invalid => controller.BadRequest(new { message = result.Error }),
-                _ => controller.StatusCode(500, new { message = result.Error })
+                ResultType.NotFound => controller.NotFound(BuildErrorBody(result)),
+                ResultType.Unauthorized => controller.Unauthorized(BuildErrorBody(result)),
+                ResultType.Invalid => controller.BadRequest(BuildErrorBody(result)),
+                _ => controller.StatusCode(500, BuildErrorBody(result))
             };
         }
+
+        public static IActionResult ToValidationActionResult(this ValidationException exception, ControllerBase controller)
+        {
+            var errors = exception.Errors.Select(e => new
+            {
+                code = e.ErrorCode,
+                field = e.PropertyName,
+                message = e.ErrorMessage
+            });
+
+            return controller.BadRequest(new
+            {
+                code = ErrorCodes.ValidationError,
+                message = "One or more validation errors occurred.",
+                errors
+            });
+        }
+
+        private static object BuildErrorBody(Result result) => new
+        {
+            code = result.ErrorCode,
+            message = result.Error
+        };
     }
 }
