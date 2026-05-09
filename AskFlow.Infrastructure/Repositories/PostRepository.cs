@@ -28,9 +28,14 @@ namespace AskFlow.Infrastructure.Repositories
         public async Task<Post?> GetByIdAsync(int id)
         {
             return await _context.Posts
+                .AsNoTracking()
+                .AsSplitQuery()
                 .Include(p => p.User)
-                .Include(p => p.Comments).ThenInclude(c => c.User)
                 .Include(p => p.Likes)
+                .Include(p => p.Comments.Where(c => c.ParentCommentId == null))
+                    .ThenInclude(c => c.User)
+                .Include(p => p.Comments.Where(c => c.ParentCommentId == null))
+                    .ThenInclude(c => c.Replies)
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 
