@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="Code Coverage" uri="datacollector://Microsoft/CodeCoverage/2.0" assemblyQualifiedName="Microsoft.VisualStudio.Coverage.DynamicCoverageDataCollector, Microsoft.VisualStudio.TraceCollector, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+        <Configuration>
+          <CodeCoverage>
+            <ModulePaths>
+              <Include>
+                <ModulePath>.*AskFlow\.Application\.dll$</ModulePath>
+                <ModulePath>.*AskFlow\.Domain\.dll$</ModulePath>
+                <ModulePath>.*AskFlow\.Infrastructure\.dll$</ModulePath>
+                <ModulePath>.*AskFlow\.WebAPI\.dll$</ModulePath>
+              </Include>
+              <Exclude>
+                <ModulePath>.*AskFlow\.Tests\.dll$</ModulePath>
+              </Exclude>
+            </ModulePaths>
+
+            <Sources>
+              <Exclude>
+                <Source>.*\\Migrations\\.*</Source>
+                <Source>.*\\Mappings\\.*</Source>
+                <Source>.*\\Program\.cs$</Source>
+                <Source>.*\\AppDbContext\.cs$</Source>
+                <Source>.*\\DependencyInjection\.cs$</Source>
+                <Source>.*\\JwtSettings\.cs$</Source>
+              </Exclude>
+            </Sources>
+
+            <Attributes>
+              <Exclude>
+                <Attribute>^System\.Diagnostics\.DebuggerHiddenAttribute$</Attribute>
+                <Attribute>^System\.Diagnostics\.DebuggerNonUserCodeAttribute$</Attribute>
+                <Attribute>^System\.CodeDom\.Compiler\.GeneratedCodeAttribute$</Attribute>
+                <Attribute>^System\.Runtime\.CompilerServices\.CompilerGeneratedAttribute$</Attribute>
+                <Attribute>^Microsoft\.EntityFrameworkCore\.Migrations\.MigrationAttribute$</Attribute>
+              </Exclude>
+            </Attributes>
+
+            <Functions>
+              <Exclude>
+                <Function>.*\.Migrations\..*</Function>
+              </Exclude>
+            </Functions>
+
+            <UseVerifiableInstrumentation>False</UseVerifiableInstrumentation>
+            <AllowLowIntegrityProcesses>True</AllowLowIntegrityProcesses>
+            <CollectFromChildProcesses>True</CollectFromChildProcesses>
+            <CollectAspDotNet>False</CollectAspDotNet>
+          </CodeCoverage>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>
