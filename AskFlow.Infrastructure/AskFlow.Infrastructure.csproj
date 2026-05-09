@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\AskFlow.Application\AskFlow.Application.csproj" />
     <ProjectReference Include="..\AskFlow.Domain\AskFlow.Domain.csproj" />
   </ItemGroup>
 

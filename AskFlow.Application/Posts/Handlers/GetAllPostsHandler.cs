@@ -1,29 +1,22 @@
-﻿using AskFlow.Application.Posts.Queries;
+using AskFlow.Application.Common;
+using AskFlow.Application.Posts.Queries;
 using AskFlow.Application.Posts.ViewModels;
-using AskFlow.Application.User.ViewModels;
+using AskFlow.Application.Users.ViewModels;
 using AskFlow.Domain.Interfaces;
 using MediatR;
 
 namespace AskFlow.Application.Posts.Handlers
 {
-    public class GetAllPostsHandler : IRequestHandler<GetAllPostsQuery, IEnumerable<PostsViewModel>>
+    public class GetAllPostsHandler(IPostRepository repository) : IRequestHandler<GetAllPostsQuery, Result<PagedResult<PostsViewModel>>>
     {
-        private readonly IPostRepository _repository;
-
-        public GetAllPostsHandler(IPostRepository repository)
+        public async Task<Result<PagedResult<PostsViewModel>>> Handle(GetAllPostsQuery request, CancellationToken cancellationToken)
         {
-            _repository = repository;
-        }
+            var totalCount = await repository.CountAsync(cancellationToken);
+            var posts = await repository.GetAllAsync(request.Page, request.PageSize, cancellationToken);
 
-        public async Task<IEnumerable<PostsViewModel>> Handle(
-            GetAllPostsQuery request,
-            CancellationToken cancellationToken)
-        {
-            var posts = _repository.GetAll();
-
-            return posts.Select(p => new PostsViewModel
+            var items = posts.Select(p => new PostsViewModel
             {
-                Id = p.Id,  
+                Id = p.Id,
                 Content = p.Content,
                 CreatedAt = p.CreatedAt,
                 Comments = p.Comments.Count,
@@ -33,6 +26,14 @@ namespace AskFlow.Application.Posts.Handlers
                     UserName = p.User.UserName ?? string.Empty,
                     Identification = p.User.Identification
                 }
+            }).ToList();
+
+            return Result<PagedResult<PostsViewModel>>.Success(new PagedResult<PostsViewModel>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                Page = request.Page,
+                PageSize = request.PageSize
             });
         }
     }
