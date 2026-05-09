@@ -1,0 +1,135 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - develop
+
+jobs:
+  validate-branch:
+    name: Validate branch name
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check naming convention
+        env:
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          pattern="^(feature|bug|bugfix|fix|hotfix|chore|refactor|docs|test)/[a-zA-Z0-9._/-]+$"
+          if [[ ! "$BRANCH" =~ $pattern ]]; then
+            echo "::error::Branch '$BRANCH' violates the naming convention."
+            echo "Required format: <prefix>/<name>"
+            echo "Accepted prefixes: feature | bug | bugfix | fix | hotfix | chore | refactor | docs | test"
+            exit 1
+          fi
+          echo "Branch name valid: $BRANCH"
+
+  build-and-test:
+    name: Build, Test & Coverage Gate
+    needs: validate-branch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          path: pr
+
+      - name: Checkout develop (base)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.base_ref }}
+          path: base
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      # ── PR branch ────────────────────────────────────────────────────
+
+      - name: Restore & build (PR)
+        working-directory: pr
+        run: |
+          dotnet restore
+          dotnet build --no-restore --configuration Release
+
+      - name: Test with coverage (PR)
+        working-directory: pr
+        run: |
+          dotnet test AskFlow.Tests/AskFlow.Tests.csproj \
+            --no-build --configuration Release \
+            --settings AskFlow.Tests/coverlet.runsettings \
+            --collect:"XPlat Code Coverage" \
+            --results-directory TestResults
+
+      - name: Parse PR coverage
+        id: pr
+        working-directory: pr
+        run: |
+          FILE=$(find TestResults -name "coverage.cobertura.xml" | head -1)
+          if [ -z "$FILE" ]; then
+            echo "::error::Coverage report not found for PR branch."
+            exit 1
+          fi
+          PCT=$(python3 -c "
+          import xml.etree.ElementTree as ET
+          rate = ET.parse('$FILE').getroot().get('line-rate', '0')
+          print(round(float(rate) * 100, 2))
+          ")
+          echo "pct=$PCT" >> $GITHUB_OUTPUT
+          echo "PR branch coverage: $PCT%"
+
+      # ── Base branch ──────────────────────────────────────────────────
+
+      - name: Restore & build (base)
+        working-directory: base
+        run: |
+          dotnet restore
+          dotnet build --no-restore --configuration Release
+
+      - name: Test with coverage (base)
+        working-directory: base
+        run: |
+          dotnet test AskFlow.Tests/AskFlow.Tests.csproj \
+            --no-build --configuration Release \
+            --settings AskFlow.Tests/coverlet.runsettings \
+            --collect:"XPlat Code Coverage" \
+            --results-directory TestResults
+
+      - name: Parse base coverage
+        id: base
+        working-directory: base
+        run: |
+          FILE=$(find TestResults -name "coverage.cobertura.xml" | head -1)
+          if [ -z "$FILE" ]; then
+            echo "::warning::No coverage report on base branch — skipping comparison."
+            echo "pct=0" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          PCT=$(python3 -c "
+          import xml.etree.ElementTree as ET
+          rate = ET.parse('$FILE').getroot().get('line-rate', '0')
+          print(round(float(rate) * 100, 2))
+          ")
+          echo "pct=$PCT" >> $GITHUB_OUTPUT
+          echo "Base branch coverage: $PCT%"
+
+      # ── Coverage gate ─────────────────────────────────────────────────
+
+      - name: Coverage gate
+        env:
+          PR_PCT: ${{ steps.pr.outputs.pct }}
+          BASE_PCT: ${{ steps.base.outputs.pct }}
+        run: |
+          python3 - <<'EOF'
+          import os, sys
+          pr   = float(os.environ['PR_PCT'])
+          base = float(os.environ['BASE_PCT'])
+          print(f"develop : {base}%")
+          print(f"this PR : {pr}%")
+          if pr < base:
+              print(f"::error::Coverage dropped {base}% → {pr}%. PRs must maintain or improve coverage.")
+              sys.exit(1)
+          delta = round(pr - base, 2)
+          sign  = f"+{delta}" if delta > 0 else str(delta)
+          print(f"Coverage gate passed: {base}% → {pr}% ({sign}%)")
+          EOF
