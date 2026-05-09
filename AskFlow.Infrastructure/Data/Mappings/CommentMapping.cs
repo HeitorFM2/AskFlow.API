@@ -16,6 +16,11 @@ namespace AskFlow.Infrastructure.Data.Mappings
 
             builder.Property(c => c.CreatedAt)
                 .IsRequired();
+
+            builder.HasMany(c => c.Replies)
+                .WithOne(c => c.ParentComment)
+                .HasForeignKey(c => c.ParentCommentId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

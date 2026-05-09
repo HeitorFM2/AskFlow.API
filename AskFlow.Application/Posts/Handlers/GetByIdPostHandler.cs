@@ -35,6 +35,8 @@ namespace AskFlow.Application.Posts.Handlers
         {
             Id = comment.Id,
             Content = comment.Content,
+            ParentCommentId = comment.ParentCommentId,
+            ReplyCount = comment.Replies.Count,
             CreatedAt = comment.CreatedAt,
             User = MapToUserViewModel(comment.User)
         };

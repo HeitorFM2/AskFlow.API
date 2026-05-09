@@ -25,6 +25,7 @@ namespace AskFlow.Infrastructure
 
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IPostRepository, PostRepository>();
+            services.AddScoped<ICommentRepository, CommentRepository>();
             services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
             return services;
