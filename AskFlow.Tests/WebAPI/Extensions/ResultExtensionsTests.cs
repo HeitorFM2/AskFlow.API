@@ -1,5 +1,7 @@
 using AskFlow.Application.Common;
 using AskFlow.WebAPI.Extensions;
+using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AskFlow.Tests.WebAPI.Extensions
@@ -17,31 +19,31 @@ namespace AskFlow.Tests.WebAPI.Extensions
         }
 
         [Fact]
-        public void Result_NotFound_ShouldReturn404_WithMessage()
+        public void Result_NotFound_ShouldReturn404_WithCodeAndMessage()
         {
-            var action = Result.NotFound("missing").ToActionResult(_controller);
+            var action = Result.NotFound("X_CODE", "missing").ToActionResult(_controller);
             var notFound = action.Should().BeOfType<NotFoundObjectResult>().Subject;
-            notFound.Value.Should().BeEquivalentTo(new { message = "missing" });
+            notFound.Value.Should().BeEquivalentTo(new { code = "X_CODE", message = "missing" });
         }
 
         [Fact]
         public void Result_Unauthorized_ShouldReturn401()
         {
-            var action = Result.Unauthorized("nope").ToActionResult(_controller);
+            var action = Result.Unauthorized("X", "nope").ToActionResult(_controller);
             action.Should().BeOfType<UnauthorizedObjectResult>();
         }
 
         [Fact]
         public void Result_Invalid_ShouldReturn400()
         {
-            var action = Result.Invalid("ruim").ToActionResult(_controller);
+            var action = Result.Invalid("X", "ruim").ToActionResult(_controller);
             action.Should().BeOfType<BadRequestObjectResult>();
         }
 
         [Fact]
         public void Result_Failure_ShouldReturn500()
         {
-            var action = Result.Failure("boom").ToActionResult(_controller);
+            var action = Result.Failure("X", "boom").ToActionResult(_controller);
             action.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(500);
         }
 
@@ -60,9 +62,9 @@ namespace AskFlow.Tests.WebAPI.Extensions
         {
             Result<int> result = type switch
             {
-                ResultType.NotFound => Result<int>.NotFound("e"),
-                ResultType.Unauthorized => Result<int>.Unauthorized("e"),
-                ResultType.Invalid => Result<int>.Invalid("e"),
+                ResultType.NotFound => Result<int>.NotFound("C", "e"),
+                ResultType.Unauthorized => Result<int>.Unauthorized("C", "e"),
+                ResultType.Invalid => Result<int>.Invalid("C", "e"),
                 _ => throw new ArgumentOutOfRangeException()
             };
 
@@ -72,8 +74,33 @@ namespace AskFlow.Tests.WebAPI.Extensions
         [Fact]
         public void GenericResult_Failure_ShouldReturn500()
         {
-            var action = Result<int>.Failure("boom").ToActionResult(_controller);
+            var action = Result<int>.Failure("C", "boom").ToActionResult(_controller);
             action.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(500);
+        }
+
+        [Fact]
+        public void ValidationException_ToValidationActionResult_ShouldReturnBadRequest_WithCodesAndErrors()
+        {
+            var failures = new[]
+            {
+                new ValidationFailure("Email", "Email is required.") { ErrorCode = "EMAIL_REQUIRED" },
+                new ValidationFailure("Password", "Password is required.") { ErrorCode = "PASSWORD_REQUIRED" }
+            };
+            var ex = new ValidationException(failures);
+
+            var action = ex.ToValidationActionResult(_controller);
+            var bad = action.Should().BeOfType<BadRequestObjectResult>().Subject;
+
+            bad.Value.Should().BeEquivalentTo(new
+            {
+                code = ErrorCodes.ValidationError,
+                message = "One or more validation errors occurred.",
+                errors = new[]
+                {
+                    new { code = "EMAIL_REQUIRED", field = "Email", message = "Email is required." },
+                    new { code = "PASSWORD_REQUIRED", field = "Password", message = "Password is required." }
+                }
+            });
         }
     }
 }

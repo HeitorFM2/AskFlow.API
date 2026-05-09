@@ -16,7 +16,7 @@ namespace AskFlow.Application.Posts.Handlers
             var post = await repository.GetByIdAsync(request.postId);
 
             if (post is null)
-                return Result<PostViewModel>.NotFound("Post não encontrado.");
+                return Result<PostViewModel>.NotFound(ErrorCodes.PostNotFound, "Post not found.");
 
             return Result<PostViewModel>.Success(MapToViewModel(post));
         }

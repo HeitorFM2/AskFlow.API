@@ -20,6 +20,7 @@ namespace AskFlow.Tests.Application.Comments.Handlers
             var result = await sut.Handle(new DeleteCommentCommand(1), default);
 
             result.Type.Should().Be(ResultType.Unauthorized);
+            result.ErrorCode.Should().Be(ErrorCodes.UserNotAuthenticated);
         }
 
         [Fact]
@@ -31,6 +32,7 @@ namespace AskFlow.Tests.Application.Comments.Handlers
             var result = await sut.Handle(new DeleteCommentCommand(1), default);
 
             result.Type.Should().Be(ResultType.NotFound);
+            result.ErrorCode.Should().Be(ErrorCodes.CommentNotFound);
         }
 
         [Fact]
@@ -43,6 +45,7 @@ namespace AskFlow.Tests.Application.Comments.Handlers
             var result = await sut.Handle(new DeleteCommentCommand(1), default);
 
             result.Type.Should().Be(ResultType.Unauthorized);
+            result.ErrorCode.Should().Be(ErrorCodes.CommentNoPermissionToDelete);
             await _repo.DidNotReceive().DeleteAsync(Arg.Any<Comment>(), Arg.Any<CancellationToken>());
         }
 

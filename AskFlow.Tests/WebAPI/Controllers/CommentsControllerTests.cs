@@ -54,7 +54,7 @@ namespace AskFlow.Tests.WebAPI.Controllers
         public async Task CreateComment_OnFailure_ShouldReturnMappedActionResult()
         {
             _mediator.Send(Arg.Any<CreateCommentCommand>(), Arg.Any<CancellationToken>())
-                .Returns(Result<int>.NotFound("post não existe"));
+                .Returns(Result<int>.NotFound(ErrorCodes.PostNotFound, "Post not found."));
 
             var action = await CreateSut().CreateComment(1, new CreateCommentBody("oi"));
 

@@ -1,4 +1,5 @@
 using AskFlow.Application.Auth.Commands;
+using AskFlow.Application.Common;
 
 namespace AskFlow.Tests.Application.Auth.Validators
 {
@@ -33,7 +34,15 @@ namespace AskFlow.Tests.Application.Auth.Validators
             var result = _sut.Validate(new RegisterCommand("user@askflow.com", "senha123", longIdent));
 
             result.IsValid.Should().BeFalse();
-            result.Errors.Should().Contain(e => e.PropertyName == nameof(RegisterCommand.Identification));
+            result.Errors.Should().Contain(e => e.PropertyName == nameof(RegisterCommand.Identification)
+                                             && e.ErrorCode == ErrorCodes.IdentificationMaxLength);
+        }
+
+        [Fact]
+        public void Validate_PasswordTooShort_ShouldHaveExpectedErrorCode()
+        {
+            var result = _sut.Validate(new RegisterCommand("user@askflow.com", "12345", "ident"));
+            result.Errors.Should().Contain(e => e.ErrorCode == ErrorCodes.PasswordMinLength);
         }
     }
 }

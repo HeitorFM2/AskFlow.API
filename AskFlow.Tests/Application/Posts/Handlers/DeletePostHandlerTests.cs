@@ -22,6 +22,7 @@ namespace AskFlow.Tests.Application.Posts.Handlers
             var result = await sut.Handle(new DeletePostCommand(1), default);
 
             result.Type.Should().Be(ResultType.Unauthorized);
+            result.ErrorCode.Should().Be(ErrorCodes.UserNotAuthenticated);
             await _repository.DidNotReceive().DeleteAsync(Arg.Any<Post>());
         }
 
@@ -34,6 +35,7 @@ namespace AskFlow.Tests.Application.Posts.Handlers
             var result = await sut.Handle(new DeletePostCommand(1), default);
 
             result.Type.Should().Be(ResultType.NotFound);
+            result.ErrorCode.Should().Be(ErrorCodes.PostNotFound);
         }
 
         [Fact]
@@ -46,6 +48,7 @@ namespace AskFlow.Tests.Application.Posts.Handlers
             var result = await sut.Handle(new DeletePostCommand(5), default);
 
             result.Type.Should().Be(ResultType.Unauthorized);
+            result.ErrorCode.Should().Be(ErrorCodes.PostNoPermissionToDelete);
             await _repository.DidNotReceive().DeleteAsync(Arg.Any<Post>());
         }
 

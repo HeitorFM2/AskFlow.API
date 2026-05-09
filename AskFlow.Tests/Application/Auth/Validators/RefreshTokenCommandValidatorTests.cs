@@ -1,4 +1,5 @@
 using AskFlow.Application.Auth.Commands;
+using AskFlow.Application.Common;
 
 namespace AskFlow.Tests.Application.Auth.Validators
 {
@@ -14,10 +15,12 @@ namespace AskFlow.Tests.Application.Auth.Validators
         }
 
         [Fact]
-        public void Validate_Empty_ShouldFail()
+        public void Validate_Empty_ShouldFail_WithExpectedErrorCode()
         {
             var result = _sut.Validate(new RefreshTokenCommand(""));
+
             result.IsValid.Should().BeFalse();
+            result.Errors.Should().Contain(e => e.ErrorCode == ErrorCodes.RefreshTokenRequired);
         }
     }
 }

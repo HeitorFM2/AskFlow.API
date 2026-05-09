@@ -28,7 +28,7 @@ namespace AskFlow.Tests.Application.Auth.Handlers
             var result = await CreateSut().Handle(new LoginCommand("a@b.com", "x"), default);
 
             result.Type.Should().Be(ResultType.Unauthorized);
-            result.Error.Should().Be("Email ou senha inválidos.");
+            result.ErrorCode.Should().Be(ErrorCodes.AuthInvalidCredentials);
         }
 
         [Fact]
@@ -41,6 +41,7 @@ namespace AskFlow.Tests.Application.Auth.Handlers
             var result = await CreateSut().Handle(new LoginCommand("a@b.com", "wrong"), default);
 
             result.Type.Should().Be(ResultType.Unauthorized);
+            result.ErrorCode.Should().Be(ErrorCodes.AuthInvalidCredentials);
         }
 
         [Fact]

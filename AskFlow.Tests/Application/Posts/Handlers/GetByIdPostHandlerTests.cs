@@ -19,6 +19,7 @@ namespace AskFlow.Tests.Application.Posts.Handlers
             var result = await sut.Handle(new GetByIdPostQuery(1), default);
 
             result.Type.Should().Be(ResultType.NotFound);
+            result.ErrorCode.Should().Be(ErrorCodes.PostNotFound);
         }
 
         [Fact]

@@ -52,7 +52,7 @@ namespace AskFlow.WebAPI.Controllers
             }
             catch (ValidationException ex)
             {
-                return BadRequest(new { message = string.Join("; ", ex.Errors.Select(e => e.ErrorMessage)) });
+                return ex.ToValidationActionResult(this);
             }
         }
 
@@ -66,7 +66,7 @@ namespace AskFlow.WebAPI.Controllers
             }
             catch (ValidationException ex)
             {
-                return BadRequest(new { message = string.Join("; ", ex.Errors.Select(e => e.ErrorMessage)) });
+                return ex.ToValidationActionResult(this);
             }
         }
     }
