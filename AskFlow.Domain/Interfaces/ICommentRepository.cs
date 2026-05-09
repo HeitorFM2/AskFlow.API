@@ -9,6 +9,7 @@ namespace AskFlow.Domain.Interfaces
         Task<Comment?> GetByIdAsync(int commentId, CancellationToken cancellationToken = default);
         Task<int> CountByPostAsync(int postId, CancellationToken cancellationToken = default);
         Task<int> CountRepliesAsync(int parentCommentId, CancellationToken cancellationToken = default);
+        Task<IReadOnlyDictionary<int, int>> GetReplyCountsAsync(IReadOnlyCollection<int> commentIds, CancellationToken cancellationToken = default);
         Task AddAsync(Comment comment, CancellationToken cancellationToken = default);
         Task DeleteAsync(Comment comment, CancellationToken cancellationToken = default);
     }

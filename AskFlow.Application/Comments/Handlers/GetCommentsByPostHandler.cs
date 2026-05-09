@@ -14,13 +14,16 @@ namespace AskFlow.Application.Comments.Handlers
             var totalCount = await repository.CountByPostAsync(request.PostId, cancellationToken);
             var comments = await repository.GetByPostAsync(request.PostId, request.Page, request.PageSize, cancellationToken);
 
+            var commentIds = comments.Select(c => c.Id).ToList();
+            var replyCounts = await repository.GetReplyCountsAsync(commentIds, cancellationToken);
+
             var items = comments.Select(c => new CommentViewModel
             {
                 Id = c.Id,
                 Content = c.Content,
                 CreatedAt = c.CreatedAt,
                 ParentCommentId = c.ParentCommentId,
-                ReplyCount = c.Replies.Count,
+                ReplyCount = replyCounts.TryGetValue(c.Id, out var count) ? count : 0,
                 User = new UserViewModel
                 {
                     UserName = c.User.UserName ?? string.Empty,

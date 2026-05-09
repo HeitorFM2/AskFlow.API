@@ -14,7 +14,6 @@ namespace AskFlow.Infrastructure.Repositories
             return await _context.Comments
                 .Where(c => c.PostId == postId && c.ParentCommentId == null)
                 .Include(c => c.User)
-                .Include(c => c.Replies)
                 .OrderByDescending(c => c.CreatedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
@@ -26,7 +25,6 @@ namespace AskFlow.Infrastructure.Repositories
             return await _context.Comments
                 .Where(c => c.ParentCommentId == parentCommentId)
                 .Include(c => c.User)
-                .Include(c => c.Replies)
                 .OrderBy(c => c.CreatedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
@@ -50,6 +48,18 @@ namespace AskFlow.Infrastructure.Repositories
         {
             return await _context.Comments
                 .CountAsync(c => c.ParentCommentId == parentCommentId, cancellationToken);
+        }
+
+        public async Task<IReadOnlyDictionary<int, int>> GetReplyCountsAsync(IReadOnlyCollection<int> commentIds, CancellationToken cancellationToken = default)
+        {
+            if (commentIds.Count == 0)
+                return new Dictionary<int, int>();
+
+            return await _context.Comments
+                .Where(c => c.ParentCommentId.HasValue && commentIds.Contains(c.ParentCommentId.Value))
+                .GroupBy(c => c.ParentCommentId!.Value)
+                .Select(g => new { ParentId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.ParentId, x => x.Count, cancellationToken);
         }
 
         public async Task AddAsync(Comment comment, CancellationToken cancellationToken = default)
