@@ -3,7 +3,5 @@
   <Project Path="AskFlow.Domain/AskFlow.Domain.csproj" />
   <Project Path="AskFlow.Infrastructure/AskFlow.Infrastructure.csproj" />
   <Project Path="AskFlow.WebAPI/AskFlow.WebAPI.csproj" />
-  <Project Path="AskFlow.Tests/AskFlow.Tests.csproj">
-    <Build Solution="Debug|*" Project="false" />
-  </Project>
+  <Project Path="AskFlow.Tests/AskFlow.Tests.csproj" />
 </Solution>
