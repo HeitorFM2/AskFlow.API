@@ -1,8 +1,8 @@
 using AskFlow.Application.Comments.Commands;
 using AskFlow.Application.Comments.Handlers;
 using AskFlow.Application.Common;
+using AskFlow.Application.Interfaces;
 using AskFlow.Domain.Entities;
-using AskFlow.Domain.Interfaces;
 using AskFlow.Tests.Common.Builders;
 using AskFlow.Tests.Common.Fixtures;
 

@@ -1,6 +1,6 @@
 using AskFlow.Application.Common;
+using AskFlow.Application.Interfaces;
 using AskFlow.Application.Posts.Command;
-using AskFlow.Domain.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -21,7 +21,7 @@ namespace AskFlow.Application.Posts.Handlers
             if (string.IsNullOrEmpty(userId))
                 return Result.Unauthorized(ErrorCodes.UserNotAuthenticated, "User not authenticated.");
 
-            var post = await repository.GetByIdAsync(command.PostId);
+            var post = await repository.FindByIdAsync(command.PostId);
 
             if (post is null)
                 return Result.NotFound(ErrorCodes.PostNotFound, "Post not found.");

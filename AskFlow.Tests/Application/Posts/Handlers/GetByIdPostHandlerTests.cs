@@ -1,9 +1,10 @@
+using AskFlow.Application.Comments.ViewModels;
 using AskFlow.Application.Common;
+using AskFlow.Application.Interfaces;
 using AskFlow.Application.Posts.Handlers;
 using AskFlow.Application.Posts.Queries;
-using AskFlow.Domain.Entities;
-using AskFlow.Domain.Interfaces;
-using AskFlow.Tests.Common.Builders;
+using AskFlow.Application.Posts.ViewModels;
+using AskFlow.Application.Users.ViewModels;
 
 namespace AskFlow.Tests.Application.Posts.Handlers
 {
@@ -13,7 +14,7 @@ namespace AskFlow.Tests.Application.Posts.Handlers
         public async Task Handle_NotFound_ShouldReturnNotFound()
         {
             var repo = Substitute.For<IPostRepository>();
-            repo.GetByIdAsync(1).Returns((Post?)null);
+            repo.GetByIdAsync(1).Returns((PostViewModel?)null);
             var sut = new GetByIdPostHandler(repo);
 
             var result = await sut.Handle(new GetByIdPostQuery(1), default);
@@ -23,21 +24,26 @@ namespace AskFlow.Tests.Application.Posts.Handlers
         }
 
         [Fact]
-        public async Task Handle_PostFound_ShouldMapToViewModel_IncludingComments()
+        public async Task Handle_PostFound_ShouldReturnViewModel_IncludingComments()
         {
-            var user = new UserBuilder().WithIdentification("ident").Build();
-            var reply = new CommentBuilder().WithUser(user).Build();
-            var comment = new CommentBuilder()
-                .WithId(20)
-                .WithUser(user)
-                .WithReplies(reply)
-                .Build();
-            var post = new PostBuilder()
-                .WithId(7)
-                .WithUser(user)
-                .WithComments(comment)
-                .WithLikes(new LikeBuilder().WithUser(user).Build())
-                .Build();
+            var user = new UserViewModel { UserName = "user", Identification = "ident" };
+            var comment = new CommentViewModel
+            {
+                Id = 20,
+                Content = "comment",
+                CreatedAt = DateTime.UtcNow,
+                ReplyCount = 1,
+                User = user
+            };
+            var post = new PostViewModel
+            {
+                Id = 7,
+                Content = "post content",
+                CreatedAt = DateTime.UtcNow,
+                Likes = 1,
+                Comments = [comment],
+                User = user
+            };
 
             var repo = Substitute.For<IPostRepository>();
             repo.GetByIdAsync(7).Returns(post);

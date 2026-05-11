@@ -39,5 +39,22 @@ namespace AskFlow.Tests.Domain
             post.Likes.Should().ContainSingle().Which.Should().Be(like);
             post.User.Should().Be(user);
         }
+
+        [Fact]
+        public void ParameterlessConstructor_ShouldInitialize_DefaultValues()
+        {
+            var post = (Post)Activator.CreateInstance(typeof(Post), nonPublic: true)!;
+
+            post.Should().NotBeNull();
+            post.Id.Should().Be(0);
+            post.Content.Should().BeEmpty();
+            post.UserId.Should().BeEmpty();
+            post.IsDeleted.Should().BeFalse();
+            post.DeletedAt.Should().BeNull();
+            post.UpdatedAt.Should().BeNull();
+            post.Comments.Should().BeEmpty();
+            post.Likes.Should().BeEmpty();
+            post.CreatedAt.Should().Be(default);
+        }
     }
 }

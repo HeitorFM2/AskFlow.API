@@ -1,5 +1,7 @@
+using AskFlow.Application.Comments.ViewModels;
+using AskFlow.Application.Interfaces;
+using AskFlow.Application.Users.ViewModels;
 using AskFlow.Domain.Entities;
-using AskFlow.Domain.Interfaces;
 using AskFlow.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,32 +11,79 @@ namespace AskFlow.Infrastructure.Repositories
     {
         private readonly AppDbContext _context = context;
 
-        public async Task<IReadOnlyList<Comment>> GetByPostAsync(int postId, int page, int pageSize, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<CommentViewModel>> GetByPostAsync(int postId, int page, int pageSize, CancellationToken cancellationToken = default)
         {
-            return await _context.Comments
+            var data = await _context.Comments
+                .AsNoTracking()
                 .Where(c => c.PostId == postId && c.ParentCommentId == null)
-                .Include(c => c.User)
                 .OrderByDescending(c => c.CreatedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
+                .Select(c => new
+                {
+                    c.Id,
+                    c.Content,
+                    c.CreatedAt,
+                    c.ParentCommentId,
+                    ReplyCount = c.Replies.Count(),
+                    c.User.UserName,
+                    c.User.Identification
+                })
                 .ToListAsync(cancellationToken);
+
+            return data.Select(c => new CommentViewModel
+            {
+                Id = c.Id,
+                Content = c.Content,
+                CreatedAt = c.CreatedAt,
+                ParentCommentId = c.ParentCommentId,
+                ReplyCount = c.ReplyCount,
+                User = new UserViewModel
+                {
+                    UserName = c.UserName ?? "",
+                    Identification = c.Identification
+                }
+            }).ToList();
         }
 
-        public async Task<IReadOnlyList<Comment>> GetRepliesAsync(int parentCommentId, int page, int pageSize, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<CommentViewModel>> GetRepliesAsync(int parentCommentId, int page, int pageSize, CancellationToken cancellationToken = default)
         {
-            return await _context.Comments
+            var data = await _context.Comments
+                .AsNoTracking()
                 .Where(c => c.ParentCommentId == parentCommentId)
-                .Include(c => c.User)
                 .OrderBy(c => c.CreatedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
+                .Select(c => new
+                {
+                    c.Id,
+                    c.Content,
+                    c.CreatedAt,
+                    c.ParentCommentId,
+                    ReplyCount = c.Replies.Count(),
+                    c.User.UserName,
+                    c.User.Identification
+                })
                 .ToListAsync(cancellationToken);
+
+            return data.Select(c => new CommentViewModel
+            {
+                Id = c.Id,
+                Content = c.Content,
+                CreatedAt = c.CreatedAt,
+                ParentCommentId = c.ParentCommentId,
+                ReplyCount = c.ReplyCount,
+                User = new UserViewModel
+                {
+                    UserName = c.UserName ?? "",
+                    Identification = c.Identification
+                }
+            }).ToList();
         }
 
         public async Task<Comment?> GetByIdAsync(int commentId, CancellationToken cancellationToken = default)
         {
             return await _context.Comments
-                .Include(c => c.User)
                 .FirstOrDefaultAsync(c => c.Id == commentId, cancellationToken);
         }
 
@@ -48,18 +97,6 @@ namespace AskFlow.Infrastructure.Repositories
         {
             return await _context.Comments
                 .CountAsync(c => c.ParentCommentId == parentCommentId, cancellationToken);
-        }
-
-        public async Task<IReadOnlyDictionary<int, int>> GetReplyCountsAsync(IReadOnlyCollection<int> commentIds, CancellationToken cancellationToken = default)
-        {
-            if (commentIds.Count == 0)
-                return new Dictionary<int, int>();
-
-            return await _context.Comments
-                .Where(c => c.ParentCommentId.HasValue && commentIds.Contains(c.ParentCommentId.Value))
-                .GroupBy(c => c.ParentCommentId!.Value)
-                .Select(g => new { ParentId = g.Key, Count = g.Count() })
-                .ToDictionaryAsync(x => x.ParentId, x => x.Count, cancellationToken);
         }
 
         public async Task AddAsync(Comment comment, CancellationToken cancellationToken = default)

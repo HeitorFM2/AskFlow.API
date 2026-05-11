@@ -1,26 +1,24 @@
 using AskFlow.Application.Comments.Handlers;
 using AskFlow.Application.Comments.Queries;
-using AskFlow.Domain.Entities;
-using AskFlow.Domain.Interfaces;
-using AskFlow.Tests.Common.Builders;
+using AskFlow.Application.Comments.ViewModels;
+using AskFlow.Application.Interfaces;
+using AskFlow.Application.Users.ViewModels;
 
 namespace AskFlow.Tests.Application.Comments.Handlers
 {
     public class GetCommentsByPostHandlerTests
     {
         [Fact]
-        public async Task Handle_ShouldMapComments_AndIncludeReplyCounts()
+        public async Task Handle_ShouldReturn_CommentsViewModel_WithReplyCounts()
         {
-            var user = new UserBuilder().WithIdentification("alice").Build();
-            var c1 = new CommentBuilder().WithId(1).WithUser(user).Build();
-            var c2 = new CommentBuilder().WithId(2).WithUser(user).Build();
+            var user = new UserViewModel { UserName = "alice", Identification = "alice" };
+            var c1 = new CommentViewModel { Id = 1, Content = "c1", CreatedAt = DateTime.UtcNow, ReplyCount = 3, User = user };
+            var c2 = new CommentViewModel { Id = 2, Content = "c2", CreatedAt = DateTime.UtcNow, ReplyCount = 0, User = user };
 
             var repo = Substitute.For<ICommentRepository>();
             repo.CountByPostAsync(10, Arg.Any<CancellationToken>()).Returns(2);
             repo.GetByPostAsync(10, 1, 20, Arg.Any<CancellationToken>())
-                .Returns(new List<Comment> { c1, c2 });
-            repo.GetReplyCountsAsync(Arg.Any<IReadOnlyCollection<int>>(), Arg.Any<CancellationToken>())
-                .Returns(new Dictionary<int, int> { [1] = 3 });
+                .Returns(new List<CommentViewModel> { c1, c2 });
 
             var sut = new GetCommentsByPostHandler(repo);
             var result = await sut.Handle(new GetCommentsByPostQuery(10), default);

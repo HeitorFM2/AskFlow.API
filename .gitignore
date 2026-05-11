@@ -6,6 +6,14 @@
 # dotenv files
 .env
 
+# ASP.NET Core appsettings with secrets (keep only appsettings.example.* tracked)
+appsettings.Development.json
+appsettings.Staging.json
+appsettings.Production.json
+appsettings.Local.json
+!appsettings.example.*.json
+!appsettings.example.json
+
 # User-specific files
 *.rsuser
 *.suo

@@ -1,8 +1,8 @@
 using AskFlow.Application.Common;
+using AskFlow.Application.Interfaces;
 using AskFlow.Application.Posts.Command;
 using AskFlow.Application.Posts.Handlers;
 using AskFlow.Domain.Entities;
-using AskFlow.Domain.Interfaces;
 using AskFlow.Tests.Common.Fixtures;
 using Microsoft.Extensions.Logging;
 

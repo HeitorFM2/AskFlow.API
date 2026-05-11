@@ -1,6 +1,6 @@
 ﻿using AskFlow.Domain.Entities;
 
-namespace AskFlow.Domain.Interfaces
+namespace AskFlow.Application.Interfaces
 {
     public interface IRefreshTokenRepository
     {

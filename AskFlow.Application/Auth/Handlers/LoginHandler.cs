@@ -3,7 +3,6 @@ using AskFlow.Application.Auth.ViewModels;
 using AskFlow.Application.Common;
 using AskFlow.Application.Interfaces;
 using AskFlow.Domain.Entities;
-using AskFlow.Domain.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;

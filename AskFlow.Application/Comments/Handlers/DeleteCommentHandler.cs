@@ -1,6 +1,6 @@
 using AskFlow.Application.Comments.Commands;
 using AskFlow.Application.Common;
-using AskFlow.Domain.Interfaces;
+using AskFlow.Application.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
