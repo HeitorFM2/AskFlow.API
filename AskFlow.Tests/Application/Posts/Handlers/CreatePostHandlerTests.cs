@@ -51,7 +51,7 @@ namespace AskFlow.Tests.Application.Posts.Handlers
         [Fact]
         public async Task Handle_AuthenticatedViaSubClaim_ShouldAlsoWork()
         {
-            var sut = new CreatePostHandler(_repository, HttpContextFixture.CreateAuthenticated("user-1", claimType: "sub"), _logger);
+            var sut = new CreatePostHandler(_repository, HttpContextFixture.CreateAuthenticated("user-1"), _logger);
 
             var result = await sut.Handle(new CreatePostCommand("conteudo"), default);
 

@@ -11,7 +11,7 @@ namespace AskFlow.Tests.Application.Comments.Handlers
         [Fact]
         public async Task Handle_ShouldReturn_RepliesViewModel_WithNestedReplyCounts()
         {
-            var user = new UserViewModel { UserName = "bob", Identification = "bob" };
+            var user = new UserDto { UserName = "bob", Identification = "bob" };
             var r1 = new CommentViewModel { Id = 11, Content = "reply", CreatedAt = DateTime.UtcNow, ParentCommentId = 10, ReplyCount = 2, User = user };
 
             var repo = Substitute.For<ICommentRepository>();

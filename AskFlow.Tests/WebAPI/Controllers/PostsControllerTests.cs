@@ -34,7 +34,7 @@ namespace AskFlow.Tests.WebAPI.Controllers
                 .Returns(Result<PostViewModel>.Success(new PostViewModel
                 {
                     Comments = Array.Empty<AskFlow.Application.Comments.ViewModels.CommentViewModel>(),
-                    User = new UserViewModel()
+                    User = new UserDto()
                 }));
 
             var action = await CreateSut().GetById(1);

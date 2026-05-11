@@ -2,19 +2,16 @@ using AskFlow.Application.Comments.Commands;
 using AskFlow.Application.Common;
 using AskFlow.Application.Interfaces;
 using MediatR;
-using Microsoft.AspNetCore.Http;
-using System.Security.Claims;
 
 namespace AskFlow.Application.Comments.Handlers
 {
     public class DeleteCommentHandler(
         ICommentRepository repository,
-        IHttpContextAccessor httpContextAccessor) : IRequestHandler<DeleteCommentCommand, Result>
+        ICurrentUserService currentUserService) : IRequestHandler<DeleteCommentCommand, Result>
     {
         public async Task<Result> Handle(DeleteCommentCommand command, CancellationToken cancellationToken)
         {
-            var userId = httpContextAccessor.HttpContext?.User.FindFirst("sub")?.Value
-                ?? httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = currentUserService.GetUserId();
 
             if (string.IsNullOrEmpty(userId))
                 return Result.Unauthorized(ErrorCodes.UserNotAuthenticated, "User not authenticated.");

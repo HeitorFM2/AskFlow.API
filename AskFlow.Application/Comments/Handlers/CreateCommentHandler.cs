@@ -3,22 +3,19 @@ using AskFlow.Application.Common;
 using AskFlow.Application.Interfaces;
 using AskFlow.Domain.Entities;
 using MediatR;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using System.Security.Claims;
 
 namespace AskFlow.Application.Comments.Handlers
 {
     public class CreateCommentHandler(
         ICommentRepository commentRepository,
         IPostRepository postRepository,
-        IHttpContextAccessor httpContextAccessor,
+        ICurrentUserService currentUserService,
         ILogger<CreateCommentHandler> logger) : IRequestHandler<CreateCommentCommand, Result<int>>
     {
         public async Task<Result<int>> Handle(CreateCommentCommand command, CancellationToken cancellationToken)
         {
-            var userId = httpContextAccessor.HttpContext?.User.FindFirst("sub")?.Value
-                ?? httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = currentUserService.GetUserId();
 
             if (string.IsNullOrEmpty(userId))
                 return Result<int>.Unauthorized(ErrorCodes.UserNotAuthenticated, "User not authenticated.");

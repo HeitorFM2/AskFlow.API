@@ -10,5 +10,13 @@
 
         public string UserId { get; set; } = string.Empty;
         public required User User { get; set; }
+
+        private Like() { }
+
+        public Like(int postId, string userId)
+        {
+            UserId = userId;
+            PostId = postId;
+        }
     }
 }

@@ -10,7 +10,8 @@ namespace AskFlow.Application.Posts.ViewModels
         public DateTime CreatedAt { get; set; }
         public int Comments { get; set; }
         public int Likes { get; set; }
-        public required UserViewModel User { get; set; }
+        public bool IsLiked { get; set; }
+        public required UserDto User { get; set; }
     }
 
     public class PostViewModel
@@ -20,6 +21,6 @@ namespace AskFlow.Application.Posts.ViewModels
         public DateTime CreatedAt { get; set; }
         public int Likes { get; set; }
         public required IEnumerable<CommentViewModel> Comments { get; set; }
-        public required UserViewModel User { get; set; }
+        public required UserDto User { get; set; }
     }
 }

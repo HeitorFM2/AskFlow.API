@@ -31,12 +31,11 @@ namespace AskFlow.Tests.Common.Builders
         {
             var user = _user ?? new UserBuilder().Build();
             var post = _post ?? new PostBuilder().WithUser(user).Build();
-            return new Like
+            return new Like(post.Id, user.Id)
             {
                 Id = _id,
                 CreatedAt = _createdAt,
                 User = user,
-                UserId = user.Id,
                 Post = post
             };
         }

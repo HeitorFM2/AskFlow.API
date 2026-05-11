@@ -11,7 +11,7 @@ namespace AskFlow.Tests.Application.Comments.Handlers
         [Fact]
         public async Task Handle_ShouldReturn_CommentsViewModel_WithReplyCounts()
         {
-            var user = new UserViewModel { UserName = "alice", Identification = "alice" };
+            var user = new UserDto { UserName = "alice", Identification = "alice" };
             var c1 = new CommentViewModel { Id = 1, Content = "c1", CreatedAt = DateTime.UtcNow, ReplyCount = 3, User = user };
             var c2 = new CommentViewModel { Id = 2, Content = "c2", CreatedAt = DateTime.UtcNow, ReplyCount = 0, User = user };
 

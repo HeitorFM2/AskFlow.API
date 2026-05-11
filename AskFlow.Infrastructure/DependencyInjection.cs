@@ -22,10 +22,12 @@ namespace AskFlow.Infrastructure
             services.Configure<JwtSettings>(
                 configuration.GetSection("JwtSettings"));
 
+            services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IPostRepository, PostRepository>();
             services.AddScoped<ICommentRepository, CommentRepository>();
             services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+            services.AddScoped<ILikeRepository, LikeRepository>();
 
             return services;
         }
