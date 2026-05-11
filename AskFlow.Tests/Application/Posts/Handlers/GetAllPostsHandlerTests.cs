@@ -1,28 +1,30 @@
+using AskFlow.Application.Interfaces;
 using AskFlow.Application.Posts.Handlers;
 using AskFlow.Application.Posts.Queries;
-using AskFlow.Domain.Entities;
-using AskFlow.Domain.Interfaces;
-using AskFlow.Tests.Common.Builders;
+using AskFlow.Application.Posts.ViewModels;
+using AskFlow.Application.Users.ViewModels;
 
 namespace AskFlow.Tests.Application.Posts.Handlers
 {
     public class GetAllPostsHandlerTests
     {
         [Fact]
-        public async Task Handle_ShouldMap_PostsToViewModel_WithCounts()
+        public async Task Handle_ShouldReturn_PostsViewModel_WithCounts()
         {
-            var user = new UserBuilder().WithEmail("a@b.com").WithIdentification("user_a").Build();
-            var post = new PostBuilder()
-                .WithId(1)
-                .WithUser(user)
-                .WithComments(new CommentBuilder().WithUser(user).Build())
-                .WithLikes(new LikeBuilder().WithUser(user).Build())
-                .Build();
+            var item = new PostsViewModel
+            {
+                Id = 1,
+                Content = "content",
+                CreatedAt = DateTime.UtcNow,
+                Comments = 1,
+                Likes = 1,
+                User = new UserViewModel { UserName = "user", Identification = "user_a" }
+            };
 
             var repo = Substitute.For<IPostRepository>();
             repo.CountAsync(Arg.Any<CancellationToken>()).Returns(1);
             repo.GetAllAsync(1, 20, Arg.Any<CancellationToken>())
-                .Returns(new List<Post> { post });
+                .Returns(new List<PostsViewModel> { item });
 
             var sut = new GetAllPostsHandler(repo);
 
@@ -30,11 +32,11 @@ namespace AskFlow.Tests.Application.Posts.Handlers
 
             result.IsSuccess.Should().BeTrue();
             result.Value!.TotalCount.Should().Be(1);
-            var item = result.Value.Items.Should().ContainSingle().Subject;
-            item.Id.Should().Be(1);
-            item.Comments.Should().Be(1);
-            item.Likes.Should().Be(1);
-            item.User.Identification.Should().Be("user_a");
+            var returned = result.Value.Items.Should().ContainSingle().Subject;
+            returned.Id.Should().Be(1);
+            returned.Comments.Should().Be(1);
+            returned.Likes.Should().Be(1);
+            returned.User.Identification.Should().Be("user_a");
             result.Value.Page.Should().Be(1);
             result.Value.PageSize.Should().Be(20);
         }

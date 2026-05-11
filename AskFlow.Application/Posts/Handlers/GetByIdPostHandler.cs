@@ -1,10 +1,7 @@
-using AskFlow.Application.Comments.ViewModels;
 using AskFlow.Application.Common;
+using AskFlow.Application.Interfaces;
 using AskFlow.Application.Posts.Queries;
 using AskFlow.Application.Posts.ViewModels;
-using AskFlow.Application.Users.ViewModels;
-using AskFlow.Domain.Entities;
-using AskFlow.Domain.Interfaces;
 using MediatR;
 
 namespace AskFlow.Application.Posts.Handlers
@@ -18,33 +15,7 @@ namespace AskFlow.Application.Posts.Handlers
             if (post is null)
                 return Result<PostViewModel>.NotFound(ErrorCodes.PostNotFound, "Post not found.");
 
-            return Result<PostViewModel>.Success(MapToViewModel(post));
+            return Result<PostViewModel>.Success(post);
         }
-
-        private static PostViewModel MapToViewModel(Post post) => new()
-        {
-            Id = post.Id,
-            Content = post.Content,
-            CreatedAt = post.CreatedAt,
-            Likes = post.Likes.Count,
-            Comments = post.Comments.Select(MapToCommentViewModel),
-            User = MapToUserViewModel(post.User)
-        };
-
-        private static CommentViewModel MapToCommentViewModel(Comment comment) => new()
-        {
-            Id = comment.Id,
-            Content = comment.Content,
-            ParentCommentId = comment.ParentCommentId,
-            ReplyCount = comment.Replies.Count,
-            CreatedAt = comment.CreatedAt,
-            User = MapToUserViewModel(comment.User)
-        };
-
-        private static UserViewModel MapToUserViewModel(User user) => new()
-        {
-            UserName = user.UserName ?? string.Empty,
-            Identification = user.Identification
-        };
     }
 }

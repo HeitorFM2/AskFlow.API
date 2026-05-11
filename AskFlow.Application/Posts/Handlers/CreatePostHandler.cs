@@ -1,7 +1,7 @@
 using AskFlow.Application.Common;
+using AskFlow.Application.Interfaces;
 using AskFlow.Application.Posts.Command;
 using AskFlow.Domain.Entities;
-using AskFlow.Domain.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;

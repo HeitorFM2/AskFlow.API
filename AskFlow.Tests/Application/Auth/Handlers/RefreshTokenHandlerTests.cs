@@ -3,7 +3,6 @@ using AskFlow.Application.Auth.Handlers;
 using AskFlow.Application.Common;
 using AskFlow.Application.Interfaces;
 using AskFlow.Domain.Entities;
-using AskFlow.Domain.Interfaces;
 using AskFlow.Tests.Common.Builders;
 using Microsoft.Extensions.Logging;
 

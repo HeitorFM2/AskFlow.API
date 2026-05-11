@@ -1,6 +1,6 @@
 using AskFlow.Application.Auth.Commands;
 using AskFlow.Application.Common;
-using AskFlow.Domain.Interfaces;
+using AskFlow.Application.Interfaces;
 using MediatR;
 
 namespace AskFlow.Application.Auth.Handlers

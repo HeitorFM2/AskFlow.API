@@ -1,5 +1,4 @@
 using AskFlow.Application.Interfaces;
-using AskFlow.Domain.Interfaces;
 using AskFlow.Infrastructure.Data;
 using AskFlow.Infrastructure.Repositories;
 using AskFlow.Infrastructure.Services;

@@ -1,5 +1,5 @@
-﻿using AskFlow.Domain.Entities;
-using AskFlow.Domain.Interfaces;
+﻿using AskFlow.Application.Interfaces;
+using AskFlow.Domain.Entities;
 using AskFlow.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 

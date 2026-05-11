@@ -18,7 +18,19 @@ builder.Services.AddIdentity<User, IdentityRole>()
     .AddDefaultTokenProviders();
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var secretKey = jwtSettings["SecretKey"]!;
+var secretKey = jwtSettings["SecretKey"];
+
+if (string.IsNullOrWhiteSpace(secretKey))
+{
+    throw new InvalidOperationException(
+        "JwtSettings:SecretKey is not configured. Set it via user-secrets, environment variables, or a key vault.");
+}
+
+if (Encoding.UTF8.GetByteCount(secretKey) < 32)
+{
+    throw new InvalidOperationException(
+        "JwtSettings:SecretKey must be at least 32 bytes (256 bits) long for HMAC-SHA256.");
+}
 
 builder.Services.AddAuthentication(options =>
 {

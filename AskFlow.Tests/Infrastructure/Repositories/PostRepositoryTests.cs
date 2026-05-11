@@ -51,8 +51,7 @@ namespace AskFlow.Tests.Infrastructure.Repositories
             var found = await repo.GetByIdAsync(post.Id);
 
             found.Should().NotBeNull();
-            found!.User.Should().NotBeNull();
-            found.User.Id.Should().Be(user.Id);
+            found!.User.UserName.Should().Be(user.UserName);
         }
 
         [Fact]
@@ -78,7 +77,7 @@ namespace AskFlow.Tests.Infrastructure.Repositories
             firstPage.Should().HaveCount(3);
             secondPage.Should().HaveCount(2);
             count.Should().Be(5);
-            firstPage[0].User.Id.Should().Be(user.Id);
+            firstPage[0].User.UserName.Should().Be(user.UserName);
         }
 
         [Fact]

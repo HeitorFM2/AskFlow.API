@@ -108,38 +108,6 @@ namespace AskFlow.Tests.Infrastructure.Repositories
         }
 
         [Fact]
-        public async Task GetReplyCountsAsync_ShouldReturnEmpty_WhenInputEmpty()
-        {
-            using var fx = new DatabaseFixture();
-            var repo = new CommentRepository(fx.Context);
-
-            var dict = await repo.GetReplyCountsAsync(Array.Empty<int>());
-            dict.Should().BeEmpty();
-        }
-
-        [Fact]
-        public async Task GetReplyCountsAsync_ShouldGroupByParent()
-        {
-            using var fx = new DatabaseFixture();
-            var (ctx, postId, userId) = await SeedAsync(fx);
-            var repo = new CommentRepository(ctx);
-
-            var p1 = new CommentBuilder().WithId(0).WithPostId(postId).WithUserId(userId).Build();
-            var p2 = new CommentBuilder().WithId(0).WithPostId(postId).WithUserId(userId).Build();
-            await repo.AddAsync(p1);
-            await repo.AddAsync(p2);
-            await repo.AddAsync(new CommentBuilder().WithId(0).WithPostId(postId).WithUserId(userId).WithParentCommentId(p1.Id).Build());
-            await repo.AddAsync(new CommentBuilder().WithId(0).WithPostId(postId).WithUserId(userId).WithParentCommentId(p1.Id).Build());
-            await repo.AddAsync(new CommentBuilder().WithId(0).WithPostId(postId).WithUserId(userId).WithParentCommentId(p2.Id).Build());
-
-            var counts = await repo.GetReplyCountsAsync(new[] { p1.Id, p2.Id });
-
-            counts.Should().HaveCount(2);
-            counts[p1.Id].Should().Be(2);
-            counts[p2.Id].Should().Be(1);
-        }
-
-        [Fact]
         public async Task DeleteAsync_ShouldRemoveComment()
         {
             using var fx = new DatabaseFixture();

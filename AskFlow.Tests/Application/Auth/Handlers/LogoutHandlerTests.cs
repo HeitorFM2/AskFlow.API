@@ -1,7 +1,7 @@
 using AskFlow.Application.Auth.Commands;
 using AskFlow.Application.Auth.Handlers;
 using AskFlow.Application.Common;
-using AskFlow.Domain.Interfaces;
+using AskFlow.Application.Interfaces;
 
 namespace AskFlow.Tests.Application.Auth.Handlers
 {
