@@ -43,7 +43,7 @@ namespace AskFlow.Tests.WebAPI.Controllers
             _mediator.Send(Arg.Any<CreateCommentCommand>(), Arg.Any<CancellationToken>())
                 .Returns(Result<int>.Success(99));
 
-            var action = await CreateSut().CreateComment(1, new CreateCommentBody("oi"));
+            var action = await CreateSut().CreateComment(1, new CreateCommentCommand(1, "oi"));
 
             var created = action.Should().BeOfType<CreatedAtActionResult>().Subject;
             created.ActionName.Should().Be(nameof(CommentsController.GetByPost));
@@ -56,7 +56,7 @@ namespace AskFlow.Tests.WebAPI.Controllers
             _mediator.Send(Arg.Any<CreateCommentCommand>(), Arg.Any<CancellationToken>())
                 .Returns(Result<int>.NotFound(ErrorCodes.PostNotFound, "Post not found."));
 
-            var action = await CreateSut().CreateComment(1, new CreateCommentBody("oi"));
+            var action = await CreateSut().CreateComment(1, new CreateCommentCommand(1, "oi"));
 
             action.Should().BeOfType<NotFoundObjectResult>();
         }
@@ -67,7 +67,7 @@ namespace AskFlow.Tests.WebAPI.Controllers
             _mediator.Send(Arg.Any<CreateCommentCommand>(), Arg.Any<CancellationToken>())
                 .Returns<Task<Result<int>>>(_ => throw new ValidationException(new[] { new ValidationFailure("Content", "obrig") }));
 
-            var action = await CreateSut().CreateComment(1, new CreateCommentBody(""));
+            var action = await CreateSut().CreateComment(1, new CreateCommentCommand(1, ""));
 
             action.Should().BeOfType<BadRequestObjectResult>();
         }

@@ -1,39 +1,28 @@
-using Microsoft.AspNetCore.Http;
-using System.Security.Claims;
+using AskFlow.Application.Interfaces;
 
 namespace AskFlow.Tests.Common.Fixtures
 {
     public static class HttpContextFixture
     {
-        public static IHttpContextAccessor CreateAuthenticated(string userId, string claimType = ClaimTypes.NameIdentifier)
+        public static ICurrentUserService CreateAuthenticated(string userId)
         {
-            var accessor = Substitute.For<IHttpContextAccessor>();
-            var context = new DefaultHttpContext();
-            var identity = new ClaimsIdentity(new[]
-            {
-                new Claim(claimType, userId)
-            }, "TestAuth");
-            context.User = new ClaimsPrincipal(identity);
-            accessor.HttpContext.Returns(context);
-            return accessor;
+            var service = Substitute.For<ICurrentUserService>();
+            service.GetUserId().Returns(userId);
+            return service;
         }
 
-        public static IHttpContextAccessor CreateUnauthenticated()
+        public static ICurrentUserService CreateUnauthenticated()
         {
-            var accessor = Substitute.For<IHttpContextAccessor>();
-            var context = new DefaultHttpContext
-            {
-                User = new ClaimsPrincipal(new ClaimsIdentity())
-            };
-            accessor.HttpContext.Returns(context);
-            return accessor;
+            var service = Substitute.For<ICurrentUserService>();
+            service.GetUserId().Returns((string?)null);
+            return service;
         }
 
-        public static IHttpContextAccessor CreateNullContext()
+        public static ICurrentUserService CreateNullContext()
         {
-            var accessor = Substitute.For<IHttpContextAccessor>();
-            accessor.HttpContext.Returns((HttpContext?)null);
-            return accessor;
+            var service = Substitute.For<ICurrentUserService>();
+            service.GetUserId().Returns((string?)null);
+            return service;
         }
     }
 }

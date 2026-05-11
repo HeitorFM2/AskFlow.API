@@ -18,7 +18,7 @@ namespace AskFlow.Tests.Application.Posts.Handlers
                 CreatedAt = DateTime.UtcNow,
                 Comments = 1,
                 Likes = 1,
-                User = new UserViewModel { UserName = "user", Identification = "user_a" }
+                User = new UserDto { UserName = "user", Identification = "user_a" }
             };
 
             var repo = Substitute.For<IPostRepository>();

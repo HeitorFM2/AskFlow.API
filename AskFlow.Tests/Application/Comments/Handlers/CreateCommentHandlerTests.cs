@@ -20,7 +20,7 @@ namespace AskFlow.Tests.Application.Comments.Handlers
         private static PostViewModel AnyPost() => new()
         {
             Comments = [],
-            User = new UserViewModel()
+            User = new UserDto()
         };
 
         [Fact]

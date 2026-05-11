@@ -181,8 +181,8 @@ namespace AskFlow.Tests.Infrastructure.Repositories
             await ctx.SaveChangesAsync();
 
             ctx.Likes.AddRange(
-                new Like { UserId = user.Id, User = user, Post = post },
-                new Like { UserId = otherUser.Id, User = otherUser, Post = post });
+                new Like(post.Id, user.Id) { User = user, Post = post },
+                new Like(post.Id, otherUser.Id) { User = otherUser, Post = post });
             await ctx.SaveChangesAsync();
 
             var repo = new PostRepository(ctx);
@@ -207,7 +207,7 @@ namespace AskFlow.Tests.Infrastructure.Repositories
                 new CommentBuilder().WithId(0).WithPostId(post.Id).WithUserId(user.Id).Build(),
                 new CommentBuilder().WithId(0).WithPostId(post.Id).WithUserId(user.Id).Build(),
                 new CommentBuilder().WithId(0).WithPostId(post.Id).WithUserId(user.Id).Build());
-            ctx.Likes.Add(new Like { UserId = user.Id, User = user, Post = post });
+            ctx.Likes.Add(new Like(post.Id, user.Id) { User = user, Post = post });
             await ctx.SaveChangesAsync();
 
             var repo = new PostRepository(ctx);

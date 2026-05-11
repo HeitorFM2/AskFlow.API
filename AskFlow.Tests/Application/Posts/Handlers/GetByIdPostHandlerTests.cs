@@ -26,7 +26,7 @@ namespace AskFlow.Tests.Application.Posts.Handlers
         [Fact]
         public async Task Handle_PostFound_ShouldReturnViewModel_IncludingComments()
         {
-            var user = new UserViewModel { UserName = "user", Identification = "ident" };
+            var user = new UserDto { UserName = "user", Identification = "ident" };
             var comment = new CommentViewModel
             {
                 Id = 20,
