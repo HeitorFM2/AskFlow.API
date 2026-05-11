@@ -35,13 +35,9 @@ jobs:
         run: dotnet tool install --global dotnet-ef --version 10.0.*
 
       - name: Generate migration bundle
-        env:
-          JwtSettings__SecretKey: build-time-placeholder-not-used-at-runtime-32+
-          ConnectionStrings__DefaultConnection: Server=placeholder;Database=placeholder
         run: |
           dotnet ef migrations bundle \
             --project AskFlow.Infrastructure \
-            --startup-project AskFlow.WebAPI \
             --self-contained \
             --target-runtime linux-x64 \
             --output ${{ github.workspace }}/efbundle \
