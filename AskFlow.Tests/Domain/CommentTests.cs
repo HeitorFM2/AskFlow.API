@@ -26,5 +26,21 @@ namespace AskFlow.Tests.Domain
 
             comment.ParentCommentId.Should().Be(99);
         }
+
+        [Fact]
+        public void ParameterlessConstructor_ShouldInitialize_DefaultValues()
+        {
+            var comment = (Comment)Activator.CreateInstance(typeof(Comment), nonPublic: true)!;
+
+            comment.Should().NotBeNull();
+            comment.Id.Should().Be(0);
+            comment.Content.Should().BeEmpty();
+            comment.UserId.Should().BeEmpty();
+            comment.PostId.Should().BeNull();
+            comment.ParentCommentId.Should().BeNull();
+            comment.ParentComment.Should().BeNull();
+            comment.Replies.Should().BeEmpty();
+            comment.CreatedAt.Should().Be(default);
+        }
     }
 }
