@@ -1,4 +1,4 @@
-﻿using AskFlow.Domain.Entities;
+using AskFlow.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -10,15 +10,14 @@ namespace AskFlow.Infrastructure.Data.Mappings
         {
             builder.HasKey(r => r.Id);
 
-            builder.Property(r => r.Token)
+            builder.Property(r => r.TokenHash)
                 .IsRequired()
-                .HasMaxLength(500);
+                .HasMaxLength(128);
 
-            builder.Property(r => r.ExpiresAt)
-                .IsRequired();
+            builder.HasIndex(r => r.TokenHash).IsUnique();
 
-            builder.Property(r => r.CreatedAt)
-                .IsRequired();
+            builder.Property(r => r.ExpiresAt).IsRequired();
+            builder.Property(r => r.CreatedAt).IsRequired();
 
             builder.HasOne(r => r.User)
                 .WithMany()

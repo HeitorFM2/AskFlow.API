@@ -1,5 +1,4 @@
 using AskFlow.Application.Common;
-using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AskFlow.WebAPI.Extensions
@@ -28,23 +27,6 @@ namespace AskFlow.WebAPI.Extensions
                 ResultType.Invalid => controller.BadRequest(BuildErrorBody(result)),
                 _ => controller.StatusCode(500, BuildErrorBody(result))
             };
-        }
-
-        public static IActionResult ToValidationActionResult(this ValidationException exception, ControllerBase controller)
-        {
-            var errors = exception.Errors.Select(e => new
-            {
-                code = e.ErrorCode,
-                field = e.PropertyName,
-                message = e.ErrorMessage
-            });
-
-            return controller.BadRequest(new
-            {
-                code = ErrorCodes.ValidationError,
-                message = "One or more validation errors occurred.",
-                errors
-            });
         }
 
         private static object BuildErrorBody(Result result) => new

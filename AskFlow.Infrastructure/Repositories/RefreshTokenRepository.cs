@@ -1,4 +1,4 @@
-﻿using AskFlow.Application.Interfaces;
+using AskFlow.Application.Interfaces;
 using AskFlow.Domain.Entities;
 using AskFlow.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -11,9 +11,11 @@ namespace AskFlow.Infrastructure.Repositories
 
         public async Task<RefreshToken?> GetByTokenAsync(string token)
         {
+            var hash = RefreshToken.HashToken(token);
+
             return await _context.RefreshTokens
                 .Include(r => r.User)
-                .FirstOrDefaultAsync(r => r.Token == token);
+                .FirstOrDefaultAsync(r => r.TokenHash == hash);
         }
 
         public async Task AddAsync(RefreshToken refreshToken)

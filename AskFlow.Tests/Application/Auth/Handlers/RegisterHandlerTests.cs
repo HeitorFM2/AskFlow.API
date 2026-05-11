@@ -50,7 +50,7 @@ namespace AskFlow.Tests.Application.Auth.Handlers
             result.Value.ExpiresAt.Should().Be(expiry);
             result.Value.User.Email.Should().Be("a@b.com");
             result.Value.User.Identification.Should().Be("id");
-            await _refreshTokens.Received(1).AddAsync(Arg.Is<RefreshToken>(t => t.Token == "ref"));
+            await _refreshTokens.Received(1).AddAsync(Arg.Is<RefreshToken>(t => t.TokenHash == RefreshToken.HashToken("ref")));
         }
     }
 }

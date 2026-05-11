@@ -94,7 +94,7 @@ namespace AskFlow.Infrastructure.Repositories
 
         public async Task DeleteAsync(Post post)
         {
-            _context.Posts.Remove(post);
+            post.MarkAsDeleted();
             await _context.SaveChangesAsync();
         }
     }

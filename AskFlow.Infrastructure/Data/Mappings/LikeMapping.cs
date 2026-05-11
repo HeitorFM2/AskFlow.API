@@ -1,4 +1,4 @@
-﻿using AskFlow.Domain.Entities;
+using AskFlow.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -10,11 +10,11 @@ namespace AskFlow.Infrastructure.Data.Mappings
         {
             builder.HasKey(l => l.Id);
 
-            builder.Property(l => l.CreatedAt)
-                .IsRequired();
+            builder.Property(l => l.CreatedAt).IsRequired();
 
             builder.HasIndex(l => new { l.PostId, l.UserId })
-                .IsUnique();
+                .IsUnique()
+                .HasFilter("[PostId] IS NOT NULL");
         }
     }
 }

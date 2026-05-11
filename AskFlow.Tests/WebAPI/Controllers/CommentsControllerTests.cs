@@ -62,14 +62,14 @@ namespace AskFlow.Tests.WebAPI.Controllers
         }
 
         [Fact]
-        public async Task CreateComment_OnValidationException_ShouldReturnBadRequest()
+        public async Task CreateComment_OnValidationException_ShouldPropagate()
         {
             _mediator.Send(Arg.Any<CreateCommentCommand>(), Arg.Any<CancellationToken>())
                 .Returns<Task<Result<int>>>(_ => throw new ValidationException(new[] { new ValidationFailure("Content", "obrig") }));
 
-            var action = await CreateSut().CreateComment(1, new CreateCommentCommand(1, ""));
+            var act = async () => await CreateSut().CreateComment(1, new CreateCommentCommand(1, ""));
 
-            action.Should().BeOfType<BadRequestObjectResult>();
+            await act.Should().ThrowAsync<ValidationException>();
         }
 
         [Fact]
@@ -84,14 +84,14 @@ namespace AskFlow.Tests.WebAPI.Controllers
         }
 
         [Fact]
-        public async Task DeleteComment_OnValidationException_ShouldReturnBadRequest()
+        public async Task DeleteComment_OnValidationException_ShouldPropagate()
         {
             _mediator.Send(Arg.Any<DeleteCommentCommand>(), Arg.Any<CancellationToken>())
                 .Returns<Task<Result>>(_ => throw new ValidationException(new[] { new ValidationFailure("CommentId", "x") }));
 
-            var action = await CreateSut().DeleteComment(0);
+            var act = async () => await CreateSut().DeleteComment(0);
 
-            action.Should().BeOfType<BadRequestObjectResult>();
+            await act.Should().ThrowAsync<ValidationException>();
         }
     }
 }

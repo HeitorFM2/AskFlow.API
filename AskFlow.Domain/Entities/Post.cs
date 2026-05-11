@@ -1,4 +1,4 @@
-﻿namespace AskFlow.Domain.Entities
+namespace AskFlow.Domain.Entities
 {
     public class Post
     {
@@ -7,8 +7,8 @@
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
 
-        public bool IsDeleted { get; private set; } = false;
-        public DateTime? DeletedAt { get; set; }
+        public bool IsDeleted { get; private set; }
+        public DateTime? DeletedAt { get; private set; }
 
         public string UserId { get; set; } = string.Empty;
         public User User { get; set; } = null!;
@@ -23,6 +23,12 @@
             Content = content;
             UserId = userId;
             CreatedAt = DateTime.UtcNow;
+        }
+
+        public void MarkAsDeleted()
+        {
+            IsDeleted = true;
+            DeletedAt = DateTime.UtcNow;
         }
     }
 }

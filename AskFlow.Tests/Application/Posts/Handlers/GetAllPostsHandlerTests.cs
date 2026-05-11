@@ -3,11 +3,15 @@ using AskFlow.Application.Posts.Handlers;
 using AskFlow.Application.Posts.Queries;
 using AskFlow.Application.Posts.ViewModels;
 using AskFlow.Application.Users.ViewModels;
+using AskFlow.Tests.Common.Fixtures;
 
 namespace AskFlow.Tests.Application.Posts.Handlers
 {
     public class GetAllPostsHandlerTests
     {
+        private readonly IPostRepository _postRepo = Substitute.For<IPostRepository>();
+        private readonly ILikeRepository _likeRepo = Substitute.For<ILikeRepository>();
+
         [Fact]
         public async Task Handle_ShouldReturn_PostsViewModel_WithCounts()
         {
@@ -21,12 +25,11 @@ namespace AskFlow.Tests.Application.Posts.Handlers
                 User = new UserDto { UserName = "user", Identification = "user_a" }
             };
 
-            var repo = Substitute.For<IPostRepository>();
-            repo.CountAsync(Arg.Any<CancellationToken>()).Returns(1);
-            repo.GetAllAsync(1, 20, Arg.Any<CancellationToken>())
+            _postRepo.CountAsync(Arg.Any<CancellationToken>()).Returns(1);
+            _postRepo.GetAllAsync(1, 20, Arg.Any<CancellationToken>())
                 .Returns(new List<PostsViewModel> { item });
 
-            var sut = new GetAllPostsHandler(repo);
+            var sut = new GetAllPostsHandler(_postRepo, _likeRepo, HttpContextFixture.CreateUnauthenticated());
 
             var result = await sut.Handle(new GetAllPostsQuery(1, 20), default);
 
@@ -36,9 +39,32 @@ namespace AskFlow.Tests.Application.Posts.Handlers
             returned.Id.Should().Be(1);
             returned.Comments.Should().Be(1);
             returned.Likes.Should().Be(1);
+            returned.IsLiked.Should().BeFalse();
             returned.User.Identification.Should().Be("user_a");
             result.Value.Page.Should().Be(1);
             result.Value.PageSize.Should().Be(20);
+        }
+
+        [Fact]
+        public async Task Handle_Authenticated_ShouldFlag_IsLiked_ForKnownPosts()
+        {
+            var items = new List<PostsViewModel>
+            {
+                new() { Id = 1, User = new UserDto() },
+                new() { Id = 2, User = new UserDto() }
+            };
+
+            _postRepo.CountAsync(Arg.Any<CancellationToken>()).Returns(2);
+            _postRepo.GetAllAsync(1, 20, Arg.Any<CancellationToken>()).Returns(items);
+            _likeRepo.GetLikedPostIdsAsync("u1", Arg.Any<IEnumerable<int>>(), Arg.Any<CancellationToken>())
+                .Returns([2]);
+
+            var sut = new GetAllPostsHandler(_postRepo, _likeRepo, HttpContextFixture.CreateAuthenticated("u1"));
+
+            var result = await sut.Handle(new GetAllPostsQuery(1, 20), default);
+
+            result.Value!.Items.Single(p => p.Id == 1).IsLiked.Should().BeFalse();
+            result.Value.Items.Single(p => p.Id == 2).IsLiked.Should().BeTrue();
         }
     }
 }

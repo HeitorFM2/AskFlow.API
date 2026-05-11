@@ -36,7 +36,7 @@ namespace AskFlow.Infrastructure.Repositories
         }
 
         public async Task<int> CountLikedPostAsync(
-            string userId, 
+            string userId,
             CancellationToken cancellationToken = default)
         {
             return await _context.Likes
@@ -71,14 +71,15 @@ namespace AskFlow.Infrastructure.Repositories
 
             if (deleted > 0) return false;
 
-            var post = await _context.Posts.FindAsync([postId], cancellationToken);
+            var post = await _context.Posts.FindAsync([postId], cancellationToken)
+                ?? throw new InvalidOperationException($"Post {postId} not found.");
 
             var userRef = _context.Users.Local.FirstOrDefault(u => u.Id == userId)
                 ?? _context.Attach(new User { Id = userId, Identification = string.Empty }).Entity;
 
             _context.Likes.Add(new Like(postId, userId)
             {
-                Post = post!,
+                Post = post,
                 User = userRef
             });
 

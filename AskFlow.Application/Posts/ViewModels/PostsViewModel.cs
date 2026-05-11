@@ -20,6 +20,7 @@ namespace AskFlow.Application.Posts.ViewModels
         public string Content { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
         public int Likes { get; set; }
+        public bool IsLiked { get; set; }
         public required IEnumerable<CommentViewModel> Comments { get; set; }
         public required UserDto User { get; set; }
     }

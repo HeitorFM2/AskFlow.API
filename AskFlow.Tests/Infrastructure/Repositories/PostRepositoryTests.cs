@@ -82,7 +82,7 @@ namespace AskFlow.Tests.Infrastructure.Repositories
         }
 
         [Fact]
-        public async Task DeleteAsync_ShouldRemove_FromContext()
+        public async Task DeleteAsync_ShouldSoftDelete()
         {
             using var fx = new DatabaseFixture();
             var ctx = fx.Context;
@@ -95,7 +95,10 @@ namespace AskFlow.Tests.Infrastructure.Repositories
             var repo = new PostRepository(ctx);
             await repo.DeleteAsync(post);
 
-            (await ctx.Posts.IgnoreQueryFilters().CountAsync()).Should().Be(0);
+            (await ctx.Posts.CountAsync()).Should().Be(0);
+            var stored = await ctx.Posts.IgnoreQueryFilters().SingleAsync();
+            stored.IsDeleted.Should().BeTrue();
+            stored.DeletedAt.Should().NotBeNull();
         }
 
         [Fact]
