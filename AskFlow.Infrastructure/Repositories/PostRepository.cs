@@ -12,38 +12,31 @@ namespace AskFlow.Infrastructure.Repositories
     {
         private readonly AppDbContext _context = context;
 
-        public async Task<IReadOnlyList<PostsViewModel>> GetAllAsync(int page, int pageSize, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<PostsViewModel>> GetAllAsync(
+            int page, 
+            int pageSize, 
+            CancellationToken cancellationToken = default)
         {
-            var data = await _context.Posts
+            return await _context.Posts
                 .AsNoTracking()
                 .OrderByDescending(p => p.CreatedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(p => new
+                .Select(p => new PostsViewModel
                 {
-                    p.Id,
-                    p.Content,
-                    p.CreatedAt,
-                    CommentsCount = p.Comments.Count(),
-                    LikesCount = p.Likes.Count(),
-                    p.User.UserName,
-                    p.User.Identification
+                    Id = p.Id,
+                    Content = p.Content,
+                    CreatedAt = p.CreatedAt,
+                    Comments = p.Comments.Count,
+                    Likes = p.Likes.Count,
+                    User = new UserDto
+                    {
+                        UserName = p.User.UserName ?? "",
+                        Identification = p.User.Identification
+
+                    }
                 })
                 .ToListAsync(cancellationToken);
-
-            return data.Select(p => new PostsViewModel
-            {
-                Id = p.Id,
-                Content = p.Content,
-                CreatedAt = p.CreatedAt,
-                Comments = p.CommentsCount,
-                Likes = p.LikesCount,
-                User = new UserViewModel
-                {
-                    UserName = p.UserName ?? "",
-                    Identification = p.Identification
-                }
-            }).ToList();
         }
 
         public async Task<int> CountAsync(CancellationToken cancellationToken = default)
@@ -53,61 +46,35 @@ namespace AskFlow.Infrastructure.Repositories
 
         public async Task<PostViewModel?> GetByIdAsync(int id)
         {
-            var post = await _context.Posts
+            return await _context.Posts
                 .AsNoTracking()
                 .Where(p => p.Id == id)
-                .Select(p => new
+                .Select(post => new PostViewModel
                 {
-                    p.Id,
-                    p.Content,
-                    p.CreatedAt,
-                    LikesCount = p.Likes.Count(),
-                    p.User.UserName,
-                    p.User.Identification,
-                    Comments = p.Comments
-                        .Where(c => c.ParentCommentId == null)
-                        .OrderByDescending(c => c.CreatedAt)
-                        .Select(c => new
+                    Id = post.Id,
+                    Content = post.Content,
+                    CreatedAt = post.CreatedAt,
+                    Likes = post.Likes.Count,
+                    User = new UserDto
+                    {
+                        UserName = post.User.UserName ?? "",
+                        Identification = post.User.Identification
+                    },
+                    Comments = post.Comments.Select(c => new CommentViewModel
+                    {
+                        Id = c.Id,
+                        Content = c.Content,
+                        CreatedAt = c.CreatedAt,
+                        ParentCommentId = c.ParentCommentId,
+                        ReplyCount = c.Replies.Count,
+                        User = new UserDto
                         {
-                            c.Id,
-                            c.Content,
-                            c.CreatedAt,
-                            c.ParentCommentId,
-                            ReplyCount = c.Replies.Count(),
-                            CommentUserName = c.User.UserName,
-                            CommentIdentification = c.User.Identification
-                        })
+                            UserName = c.User.UserName ?? "",
+                            Identification = c.User.Identification
+                        }
+                    })
                 })
                 .FirstOrDefaultAsync();
-
-            if (post is null)
-                return null;
-
-            return new PostViewModel
-            {
-                Id = post.Id,
-                Content = post.Content,
-                CreatedAt = post.CreatedAt,
-                Likes = post.LikesCount,
-                User = new UserViewModel
-                {
-                    UserName = post.UserName ?? "",
-                    Identification = post.Identification
-                },
-                Comments = post.Comments.Select(c => new CommentViewModel
-                {
-                    Id = c.Id,
-                    Content = c.Content,
-                    CreatedAt = c.CreatedAt,
-                    ParentCommentId = c.ParentCommentId,
-                    ReplyCount = c.ReplyCount,
-                    User = new UserViewModel
-                    {
-                        UserName = c.CommentUserName ?? "",
-                        Identification = c.CommentIdentification
-                    }
-                })
-            };
         }
 
         public async Task<Post?> FindByIdAsync(int id)

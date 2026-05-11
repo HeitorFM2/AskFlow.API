@@ -9,6 +9,6 @@ namespace AskFlow.Application.Comments.ViewModels
         public DateTime CreatedAt { get; set; }
         public int? ParentCommentId { get; set; }
         public int ReplyCount { get; set; }
-        public required UserViewModel User { get; set; }
+        public required UserDto User { get; set; }
     }
 }

@@ -2,21 +2,18 @@ using AskFlow.Application.Common;
 using AskFlow.Application.Interfaces;
 using AskFlow.Application.Posts.Command;
 using MediatR;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using System.Security.Claims;
 
 namespace AskFlow.Application.Posts.Handlers
 {
     public class DeletePostHandler(
         IPostRepository repository,
-        IHttpContextAccessor httpContextAccessor,
+        ICurrentUserService currentUserService,
         ILogger<DeletePostHandler> logger) : IRequestHandler<DeletePostCommand, Result>
     {
         public async Task<Result> Handle(DeletePostCommand command, CancellationToken cancellationToken)
         {
-            var userId = httpContextAccessor.HttpContext?.User.FindFirst("sub")?.Value
-                ?? httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = currentUserService.GetUserId();
 
             if (string.IsNullOrEmpty(userId))
                 return Result.Unauthorized(ErrorCodes.UserNotAuthenticated, "User not authenticated.");

@@ -38,7 +38,7 @@ namespace AskFlow.Infrastructure.Repositories
                 CreatedAt = c.CreatedAt,
                 ParentCommentId = c.ParentCommentId,
                 ReplyCount = c.ReplyCount,
-                User = new UserViewModel
+                User = new UserDto
                 {
                     UserName = c.UserName ?? "",
                     Identification = c.Identification
@@ -73,7 +73,7 @@ namespace AskFlow.Infrastructure.Repositories
                 CreatedAt = c.CreatedAt,
                 ParentCommentId = c.ParentCommentId,
                 ReplyCount = c.ReplyCount,
-                User = new UserViewModel
+                User = new UserDto
                 {
                     UserName = c.UserName ?? "",
                     Identification = c.Identification
