@@ -5,17 +5,20 @@ using AskFlow.Application.Posts.Handlers;
 using AskFlow.Application.Posts.Queries;
 using AskFlow.Application.Posts.ViewModels;
 using AskFlow.Application.Users.ViewModels;
+using AskFlow.Tests.Common.Fixtures;
 
 namespace AskFlow.Tests.Application.Posts.Handlers
 {
     public class GetByIdPostHandlerTests
     {
+        private readonly IPostRepository _postRepo = Substitute.For<IPostRepository>();
+        private readonly ILikeRepository _likeRepo = Substitute.For<ILikeRepository>();
+
         [Fact]
         public async Task Handle_NotFound_ShouldReturnNotFound()
         {
-            var repo = Substitute.For<IPostRepository>();
-            repo.GetByIdAsync(1).Returns((PostViewModel?)null);
-            var sut = new GetByIdPostHandler(repo);
+            _postRepo.GetByIdAsync(1).Returns((PostViewModel?)null);
+            var sut = new GetByIdPostHandler(_postRepo, _likeRepo, HttpContextFixture.CreateAuthenticated("u1"));
 
             var result = await sut.Handle(new GetByIdPostQuery(1), default);
 
@@ -45,17 +48,41 @@ namespace AskFlow.Tests.Application.Posts.Handlers
                 User = user
             };
 
-            var repo = Substitute.For<IPostRepository>();
-            repo.GetByIdAsync(7).Returns(post);
-            var sut = new GetByIdPostHandler(repo);
+            _postRepo.GetByIdAsync(7).Returns(post);
+            _likeRepo.GetLikedPostIdsAsync("u1", Arg.Any<IEnumerable<int>>(), Arg.Any<CancellationToken>())
+                .Returns([7]);
+
+            var sut = new GetByIdPostHandler(_postRepo, _likeRepo, HttpContextFixture.CreateAuthenticated("u1"));
 
             var result = await sut.Handle(new GetByIdPostQuery(7), default);
 
             result.IsSuccess.Should().BeTrue();
             result.Value!.Id.Should().Be(7);
             result.Value.Likes.Should().Be(1);
+            result.Value.IsLiked.Should().BeTrue();
             result.Value.Comments.Should().ContainSingle().Which.ReplyCount.Should().Be(1);
             result.Value.User.Identification.Should().Be("ident");
+        }
+
+        [Fact]
+        public async Task Handle_Unauthenticated_ShouldStillReturnPost_WithIsLikedFalse()
+        {
+            var post = new PostViewModel
+            {
+                Id = 7,
+                Content = "x",
+                CreatedAt = DateTime.UtcNow,
+                Comments = [],
+                User = new UserDto()
+            };
+            _postRepo.GetByIdAsync(7).Returns(post);
+            var sut = new GetByIdPostHandler(_postRepo, _likeRepo, HttpContextFixture.CreateUnauthenticated());
+
+            var result = await sut.Handle(new GetByIdPostQuery(7), default);
+
+            result.IsSuccess.Should().BeTrue();
+            result.Value!.IsLiked.Should().BeFalse();
+            await _likeRepo.DidNotReceive().GetLikedPostIdsAsync(Arg.Any<string>(), Arg.Any<IEnumerable<int>>(), Arg.Any<CancellationToken>());
         }
     }
 }

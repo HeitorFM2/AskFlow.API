@@ -56,9 +56,12 @@ namespace AskFlow.Tests.Infrastructure.Repositories
 
             await repo.RevokeAllByUserIdAsync(u1.Id);
 
-            (await ctx.RefreshTokens.SingleAsync(t => t.Token == "a")).IsRevoked.Should().BeTrue();
-            (await ctx.RefreshTokens.SingleAsync(t => t.Token == "b")).IsRevoked.Should().BeTrue();
-            (await ctx.RefreshTokens.SingleAsync(t => t.Token == "c")).IsRevoked.Should().BeFalse();
+            var hashA = RefreshToken.HashToken("a");
+            var hashB = RefreshToken.HashToken("b");
+            var hashC = RefreshToken.HashToken("c");
+            (await ctx.RefreshTokens.SingleAsync(t => t.TokenHash == hashA)).IsRevoked.Should().BeTrue();
+            (await ctx.RefreshTokens.SingleAsync(t => t.TokenHash == hashB)).IsRevoked.Should().BeTrue();
+            (await ctx.RefreshTokens.SingleAsync(t => t.TokenHash == hashC)).IsRevoked.Should().BeFalse();
         }
     }
 }

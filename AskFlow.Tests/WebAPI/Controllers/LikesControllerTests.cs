@@ -93,15 +93,15 @@ namespace AskFlow.Tests.WebAPI.Controllers
         }
 
         [Fact]
-        public async Task ToggleLike_OnValidationException_ShouldReturnBadRequest()
+        public async Task ToggleLike_OnValidationException_ShouldPropagate()
         {
             _mediator.Send(Arg.Any<ToggleLikeCommand>(), Arg.Any<CancellationToken>())
                 .Returns<Task<Result<bool>>>(_ => throw new ValidationException(
                     new[] { new ValidationFailure("PostId", "invalid") }));
 
-            var action = await CreateSut().ToggleLike(0);
+            var act = async () => await CreateSut().ToggleLike(0);
 
-            action.Should().BeOfType<BadRequestObjectResult>();
+            await act.Should().ThrowAsync<ValidationException>();
         }
     }
 }

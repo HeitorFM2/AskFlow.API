@@ -13,7 +13,7 @@ namespace AskFlow.Tests.Domain
 
             var token = new RefreshToken("xyz", user, expiresAt);
 
-            token.Token.Should().Be("xyz");
+            token.TokenHash.Should().Be(RefreshToken.HashToken("xyz"));
             token.User.Should().Be(user);
             token.UserId.Should().Be(user.Id);
             token.ExpiresAt.Should().Be(expiresAt);

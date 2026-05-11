@@ -45,14 +45,14 @@ namespace AskFlow.Tests.WebAPI.Controllers
         }
 
         [Fact]
-        public async Task Register_OnValidationException_ShouldReturnBadRequest()
+        public async Task Register_OnValidationException_ShouldPropagate()
         {
             _mediator.Send(Arg.Any<RegisterCommand>(), Arg.Any<CancellationToken>())
                 .Returns<Task<Result<AuthViewModel>>>(_ => throw new ValidationException(new[] { new ValidationFailure("X", "obrig") }));
 
-            var action = await CreateSut().Register(new RegisterCommand("", "", ""));
+            var act = async () => await CreateSut().Register(new RegisterCommand("", "", ""));
 
-            action.Should().BeOfType<BadRequestObjectResult>();
+            await act.Should().ThrowAsync<ValidationException>();
         }
 
         [Fact]
@@ -67,14 +67,14 @@ namespace AskFlow.Tests.WebAPI.Controllers
         }
 
         [Fact]
-        public async Task Login_OnValidationException_ShouldReturnBadRequest()
+        public async Task Login_OnValidationException_ShouldPropagate()
         {
             _mediator.Send(Arg.Any<LoginCommand>(), Arg.Any<CancellationToken>())
                 .Returns<Task<Result<AuthViewModel>>>(_ => throw new ValidationException(new[] { new ValidationFailure("X", "x") }));
 
-            var action = await CreateSut().Login(new LoginCommand("", ""));
+            var act = async () => await CreateSut().Login(new LoginCommand("", ""));
 
-            action.Should().BeOfType<BadRequestObjectResult>();
+            await act.Should().ThrowAsync<ValidationException>();
         }
 
         [Fact]
@@ -89,14 +89,14 @@ namespace AskFlow.Tests.WebAPI.Controllers
         }
 
         [Fact]
-        public async Task RefreshToken_OnValidationException_ShouldReturnBadRequest()
+        public async Task RefreshToken_OnValidationException_ShouldPropagate()
         {
             _mediator.Send(Arg.Any<RefreshTokenCommand>(), Arg.Any<CancellationToken>())
                 .Returns<Task<Result<AuthViewModel>>>(_ => throw new ValidationException(new[] { new ValidationFailure("X", "x") }));
 
-            var action = await CreateSut().RefreshToken(new RefreshTokenCommand(""));
+            var act = async () => await CreateSut().RefreshToken(new RefreshTokenCommand(""));
 
-            action.Should().BeOfType<BadRequestObjectResult>();
+            await act.Should().ThrowAsync<ValidationException>();
         }
 
         [Fact]

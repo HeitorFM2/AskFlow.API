@@ -61,7 +61,7 @@ namespace AskFlow.Tests.Application.Auth.Handlers
             result.Value.RefreshToken.Should().Be("new-refresh");
             result.Value.User.Id.Should().Be(user.Id);
             token.IsRevoked.Should().BeTrue();
-            await _refreshTokens.Received(1).AddAsync(Arg.Is<RefreshToken>(t => t.Token == "new-refresh"));
+            await _refreshTokens.Received(1).AddAsync(Arg.Is<RefreshToken>(t => t.TokenHash == RefreshToken.HashToken("new-refresh")));
         }
     }
 }

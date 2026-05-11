@@ -78,14 +78,14 @@ namespace AskFlow.Tests.WebAPI.Controllers
         }
 
         [Fact]
-        public async Task CreatePost_OnValidationException_ShouldReturnBadRequest()
+        public async Task CreatePost_OnValidationException_ShouldPropagate()
         {
             _mediator.Send(Arg.Any<CreatePostCommand>(), Arg.Any<CancellationToken>())
                 .Returns<Task<Result<int>>>(_ => throw new ValidationException(new[] { new ValidationFailure("Content", "obrig") }));
 
-            var action = await CreateSut().CreatePost(new CreatePostCommand(""));
+            var act = async () => await CreateSut().CreatePost(new CreatePostCommand(""));
 
-            action.Should().BeOfType<BadRequestObjectResult>();
+            await act.Should().ThrowAsync<ValidationException>();
         }
 
         [Fact]
@@ -100,14 +100,14 @@ namespace AskFlow.Tests.WebAPI.Controllers
         }
 
         [Fact]
-        public async Task DeletePost_OnValidationException_ShouldReturnBadRequest()
+        public async Task DeletePost_OnValidationException_ShouldPropagate()
         {
             _mediator.Send(Arg.Any<DeletePostCommand>(), Arg.Any<CancellationToken>())
                 .Returns<Task<Result>>(_ => throw new ValidationException(new[] { new ValidationFailure("PostId", "x") }));
 
-            var action = await CreateSut().DeletePost(0);
+            var act = async () => await CreateSut().DeletePost(0);
 
-            action.Should().BeOfType<BadRequestObjectResult>();
+            await act.Should().ThrowAsync<ValidationException>();
         }
     }
 }

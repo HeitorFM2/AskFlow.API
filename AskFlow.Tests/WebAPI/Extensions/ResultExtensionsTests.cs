@@ -1,7 +1,5 @@
 using AskFlow.Application.Common;
 using AskFlow.WebAPI.Extensions;
-using FluentValidation;
-using FluentValidation.Results;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AskFlow.Tests.WebAPI.Extensions
@@ -76,31 +74,6 @@ namespace AskFlow.Tests.WebAPI.Extensions
         {
             var action = Result<int>.Failure("C", "boom").ToActionResult(_controller);
             action.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(500);
-        }
-
-        [Fact]
-        public void ValidationException_ToValidationActionResult_ShouldReturnBadRequest_WithCodesAndErrors()
-        {
-            var failures = new[]
-            {
-                new ValidationFailure("Email", "Email is required.") { ErrorCode = "EMAIL_REQUIRED" },
-                new ValidationFailure("Password", "Password is required.") { ErrorCode = "PASSWORD_REQUIRED" }
-            };
-            var ex = new ValidationException(failures);
-
-            var action = ex.ToValidationActionResult(_controller);
-            var bad = action.Should().BeOfType<BadRequestObjectResult>().Subject;
-
-            bad.Value.Should().BeEquivalentTo(new
-            {
-                code = ErrorCodes.ValidationError,
-                message = "One or more validation errors occurred.",
-                errors = new[]
-                {
-                    new { code = "EMAIL_REQUIRED", field = "Email", message = "Email is required." },
-                    new { code = "PASSWORD_REQUIRED", field = "Password", message = "Password is required." }
-                }
-            });
         }
     }
 }

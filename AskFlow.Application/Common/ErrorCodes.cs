@@ -3,6 +3,7 @@ namespace AskFlow.Application.Common
     public static class ErrorCodes
     {
         public const string ValidationError = "VALIDATION_ERROR";
+        public const string InternalServerError = "INTERNAL_SERVER_ERROR";
         public const string UserNotAuthenticated = "USER_NOT_AUTHENTICATED";
 
         public const string AuthInvalidCredentials = "AUTH_INVALID_CREDENTIALS";

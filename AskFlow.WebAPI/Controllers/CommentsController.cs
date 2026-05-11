@@ -1,7 +1,6 @@
 using AskFlow.Application.Comments.Commands;
 using AskFlow.Application.Comments.Queries;
 using AskFlow.WebAPI.Extensions;
-using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -40,34 +39,19 @@ namespace AskFlow.WebAPI.Controllers
             [FromRoute] int postId,
             [FromBody] CreateCommentCommand command)
         {
-            try
-            {
-                var result = await _mediator.Send(command with { PostId = postId });
+            var result = await _mediator.Send(command with { PostId = postId });
 
-                if (!result.IsSuccess)
-                    return result.ToActionResult(this);
+            if (!result.IsSuccess)
+                return result.ToActionResult(this);
 
-                return CreatedAtAction(nameof(GetByPost), new { postId }, new { id = result.Value });
-            }
-            catch (ValidationException ex)
-            {
-                return ex.ToValidationActionResult(this);
-            }
+            return CreatedAtAction(nameof(GetByPost), new { postId }, new { id = result.Value });
         }
 
         [HttpDelete("{commentId:int}")]
         public async Task<IActionResult> DeleteComment([FromRoute] int commentId)
         {
-            try
-            {
-                var result = await _mediator.Send(new DeleteCommentCommand(commentId));
-                return result.ToActionResult(this);
-            }
-            catch (ValidationException ex)
-            {
-                return ex.ToValidationActionResult(this);
-            }
+            var result = await _mediator.Send(new DeleteCommentCommand(commentId));
+            return result.ToActionResult(this);
         }
     }
-
 }
