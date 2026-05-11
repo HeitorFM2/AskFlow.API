@@ -1,0 +1,118 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - 'release/**'
+  workflow_dispatch:
+
+env:
+  APP_NAME: askflow-api
+  RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
+  STAGING_SLOT: staging
+
+jobs:
+  build:
+    name: Build, test, package
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test AskFlow.Tests/AskFlow.Tests.csproj --no-build --configuration Release
+
+      - name: Install EF tool
+        run: dotnet tool install --global dotnet-ef --version 10.0.*
+
+      - name: Generate migration bundle
+        env:
+          JwtSettings__SecretKey: build-time-placeholder-not-used-at-runtime-32+
+          ConnectionStrings__DefaultConnection: Server=placeholder;Database=placeholder
+        run: |
+          dotnet ef migrations bundle \
+            --project AskFlow.Infrastructure \
+            --startup-project AskFlow.WebAPI \
+            --self-contained \
+            --target-runtime linux-x64 \
+            --output ${{ github.workspace }}/efbundle \
+            --configuration Release \
+            --no-build
+
+      - name: Publish app
+        run: dotnet publish AskFlow.WebAPI/AskFlow.WebAPI.csproj -c Release -o ${{ github.workspace }}/publish --no-build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: efbundle
+          path: efbundle
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app
+          path: publish
+
+  migrate:
+    name: Apply migrations
+    needs: build
+    runs-on: ubuntu-latest
+    environment: production-migrations
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: efbundle
+
+      - name: Apply
+        run: |
+          chmod +x ./efbundle
+          ./efbundle --connection "${{ secrets.SQL_CONNECTION_STRING }}"
+
+  deploy-staging:
+    name: Deploy to staging slot
+    needs: migrate
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: app
+          path: app
+
+      - name: Deploy to ${{ env.STAGING_SLOT }}
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.APP_NAME }}
+          slot-name: ${{ env.STAGING_SLOT }}
+          package: app
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_STAGING }}
+
+  swap:
+    name: Swap staging into production
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Swap slots
+        run: |
+          az webapp deployment slot swap \
+            --name "${{ env.APP_NAME }}" \
+            --resource-group "${{ env.RESOURCE_GROUP }}" \
+            --slot "${{ env.STAGING_SLOT }}" \
+            --target-slot production
