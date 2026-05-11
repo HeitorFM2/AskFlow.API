@@ -60,19 +60,22 @@ namespace AskFlow.Infrastructure.Repositories
                         UserName = post.User.UserName ?? "",
                         Identification = post.User.Identification
                     },
-                    Comments = post.Comments.Select(c => new CommentViewModel
-                    {
-                        Id = c.Id,
-                        Content = c.Content,
-                        CreatedAt = c.CreatedAt,
-                        ParentCommentId = c.ParentCommentId,
-                        ReplyCount = c.Replies.Count,
-                        User = new UserDto
+                    Comments = post.Comments
+                        .Where(c => c.ParentCommentId == null)
+                        .OrderByDescending(c => c.CreatedAt)
+                        .Select(c => new CommentViewModel
                         {
-                            UserName = c.User.UserName ?? "",
-                            Identification = c.User.Identification
-                        }
-                    })
+                            Id = c.Id,
+                            Content = c.Content,
+                            CreatedAt = c.CreatedAt,
+                            ParentCommentId = c.ParentCommentId,
+                            ReplyCount = c.Replies.Count,
+                            User = new UserDto
+                            {
+                                UserName = c.User.UserName ?? "",
+                                Identification = c.User.Identification
+                            }
+                        })
                 })
                 .FirstOrDefaultAsync();
         }
