@@ -5,6 +5,7 @@ namespace AskFlow.Domain.Entities
     public class User : IdentityUser
     {
         public required string Identification { get; set; }
+        public string? AvatarUrl { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public ICollection<Post> Posts { get; set; } = [];

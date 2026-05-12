@@ -10,6 +10,7 @@ namespace AskFlow.Tests.Common.Builders
         private string _email;
         private string _userName;
         private string _identification;
+        private string? _avatarUrl;
         private DateTime _createdAt;
 
         public UserBuilder()
@@ -18,6 +19,7 @@ namespace AskFlow.Tests.Common.Builders
             _email = _faker.Internet.Email();
             _userName = _email;
             _identification = _faker.Internet.UserName();
+            _avatarUrl = null;
             _createdAt = DateTime.UtcNow;
         }
 
@@ -46,6 +48,12 @@ namespace AskFlow.Tests.Common.Builders
             return this;
         }
 
+        public UserBuilder WithAvatarUrl(string? avatarUrl)
+        {
+            _avatarUrl = avatarUrl;
+            return this;
+        }
+
         public User Build() => new()
         {
             Id = _id,
@@ -54,6 +62,7 @@ namespace AskFlow.Tests.Common.Builders
             NormalizedEmail = _email.ToUpperInvariant(),
             NormalizedUserName = _userName.ToUpperInvariant(),
             Identification = _identification,
+            AvatarUrl = _avatarUrl,
             CreatedAt = _createdAt
         };
     }
