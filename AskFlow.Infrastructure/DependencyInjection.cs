@@ -16,12 +16,17 @@ namespace AskFlow.Infrastructure
             this IServiceCollection services,
             IConfiguration configuration)
         {
-            services.AddScoped<AvatarCleanupInterceptor>();
-
-            services.AddDbContext<AppDbContext>((sp, options) =>
+            services.AddDbContext<AppDbContext>((sp,options) =>
                 options
-                    .UseSqlServer(configuration.GetConnectionString("DefaultConnection"))
+                    .UseSqlServer(
+                        configuration.GetConnectionString("DefaultConnection"),
+                        sql => sql.EnableRetryOnFailure(
+                            maxRetryCount: 3,
+                            maxRetryDelay: TimeSpan.FromSeconds(30),
+                            errorNumbersToAdd: null))
                     .AddInterceptors(sp.GetRequiredService<AvatarCleanupInterceptor>()));
+
+            services.AddScoped<AvatarCleanupInterceptor>();
 
             services.Configure<JwtSettings>(
                 configuration.GetSection("JwtSettings"));
