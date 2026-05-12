@@ -11,7 +11,10 @@ namespace AskFlow.Infrastructure.Data
                 ?? "Server=localhost;Database=AskFlow;Trusted_Connection=True;TrustServerCertificate=True";
 
             var options = new DbContextOptionsBuilder<AppDbContext>()
-                .UseSqlServer(connection)
+                .UseSqlServer(connection, sql => sql.EnableRetryOnFailure(
+                    maxRetryCount: 3,
+                    maxRetryDelay: TimeSpan.FromSeconds(30),
+                    errorNumbersToAdd: null))
                 .Options;
 
             return new AppDbContext(options);
