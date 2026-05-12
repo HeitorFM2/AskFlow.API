@@ -32,5 +32,11 @@ namespace AskFlow.Application.Common
         public const string CommentPostIdInvalid = "COMMENT_POST_ID_INVALID";
         public const string CommentContentRequired = "COMMENT_CONTENT_REQUIRED";
         public const string CommentContentMaxLength = "COMMENT_CONTENT_MAX_LENGTH";
+
+        public const string UserNotFound = "USER_NOT_FOUND";
+        public const string AvatarRequired = "AVATAR_REQUIRED";
+        public const string AvatarContentTypeInvalid = "AVATAR_CONTENT_TYPE_INVALID";
+        public const string AvatarTooLarge = "AVATAR_TOO_LARGE";
+        public const string AvatarUploadFailed = "AVATAR_UPLOAD_FAILED";
     }
 }

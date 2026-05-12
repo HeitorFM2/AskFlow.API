@@ -27,7 +27,8 @@ namespace AskFlow.Infrastructure.Repositories
                     c.ParentCommentId,
                     ReplyCount = c.Replies.Count(),
                     c.User.UserName,
-                    c.User.Identification
+                    c.User.Identification,
+                    c.User.AvatarUrl
                 })
                 .ToListAsync(cancellationToken);
 
@@ -41,7 +42,8 @@ namespace AskFlow.Infrastructure.Repositories
                 User = new UserDto
                 {
                     UserName = c.UserName ?? "",
-                    Identification = c.Identification
+                    Identification = c.Identification,
+                    AvatarUrl = c.AvatarUrl
                 }
             }).ToList();
         }
@@ -62,7 +64,8 @@ namespace AskFlow.Infrastructure.Repositories
                     c.ParentCommentId,
                     ReplyCount = c.Replies.Count(),
                     c.User.UserName,
-                    c.User.Identification
+                    c.User.Identification,
+                    c.User.AvatarUrl
                 })
                 .ToListAsync(cancellationToken);
 
@@ -76,7 +79,8 @@ namespace AskFlow.Infrastructure.Repositories
                 User = new UserDto
                 {
                     UserName = c.UserName ?? "",
-                    Identification = c.Identification
+                    Identification = c.Identification,
+                    AvatarUrl = c.AvatarUrl
                 }
             }).ToList();
         }

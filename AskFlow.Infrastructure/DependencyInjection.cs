@@ -1,5 +1,6 @@
 using AskFlow.Application.Interfaces;
 using AskFlow.Infrastructure.Data;
+using AskFlow.Infrastructure.Data.Interceptors;
 using AskFlow.Infrastructure.Repositories;
 using AskFlow.Infrastructure.Services;
 using AskFlow.Infrastructure.Settings;
@@ -15,15 +16,22 @@ namespace AskFlow.Infrastructure
             this IServiceCollection services,
             IConfiguration configuration)
         {
-            services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlServer(
-                    configuration.GetConnectionString("DefaultConnection")));
+            services.AddScoped<AvatarCleanupInterceptor>();
+
+            services.AddDbContext<AppDbContext>((sp, options) =>
+                options
+                    .UseSqlServer(configuration.GetConnectionString("DefaultConnection"))
+                    .AddInterceptors(sp.GetRequiredService<AvatarCleanupInterceptor>()));
 
             services.Configure<JwtSettings>(
                 configuration.GetSection("JwtSettings"));
 
+            services.Configure<BlobStorageSettings>(
+                configuration.GetSection("BlobStorage"));
+
             services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddScoped<ITokenService, TokenService>();
+            services.AddScoped<IAvatarStorage, AzureBlobAvatarStorage>();
             services.AddScoped<IPostRepository, PostRepository>();
             services.AddScoped<ICommentRepository, CommentRepository>();
             services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
