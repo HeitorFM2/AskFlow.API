@@ -73,10 +73,10 @@ jobs:
 
       - name: Apply
         env:
-          CONN: ${{ secrets.SQL_CONNECTION_STRING }}
+          ConnectionStrings__DefaultConnection: ${{ secrets.SQL_CONNECTION_STRING }}
         run: |
           chmod +x ./efbundle
-          ./efbundle --connection "$CONN"
+          ./efbundle --connection "$ConnectionStrings__DefaultConnection"
 
   deploy:
     name: Deploy to production
