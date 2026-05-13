@@ -32,8 +32,8 @@ namespace AskFlow.Infrastructure.Repositories
                     User = new UserDto
                     {
                         UserName = p.User.UserName ?? "",
-                        Identification = p.User.Identification
-
+                        Identification = p.User.Identification,
+                        AvatarUrl = p.User.AvatarUrl
                     }
                 })
                 .ToListAsync(cancellationToken);
@@ -58,7 +58,8 @@ namespace AskFlow.Infrastructure.Repositories
                     User = new UserDto
                     {
                         UserName = post.User.UserName ?? "",
-                        Identification = post.User.Identification
+                        Identification = post.User.Identification,
+                        AvatarUrl = post.User.AvatarUrl
                     },
                     Comments = post.Comments
                         .Where(c => c.ParentCommentId == null)
@@ -73,7 +74,8 @@ namespace AskFlow.Infrastructure.Repositories
                             User = new UserDto
                             {
                                 UserName = c.User.UserName ?? "",
-                                Identification = c.User.Identification
+                                Identification = c.User.Identification,
+                                AvatarUrl = c.User.AvatarUrl
                             }
                         })
                 })

@@ -12,6 +12,9 @@ namespace AskFlow.Infrastructure.Data.Mappings
                 .IsRequired()
                 .HasMaxLength(50);
 
+            builder.Property(u => u.AvatarUrl)
+                .HasMaxLength(500);
+
             builder.HasMany(u => u.Posts)
                 .WithOne(p => p.User)
                 .HasForeignKey(p => p.UserId)
