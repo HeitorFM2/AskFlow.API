@@ -45,8 +45,7 @@ jobs:
             --self-contained \
             --target-runtime linux-x64 \
             --output ${{ github.workspace }}/efbundle \
-            --configuration Release \
-            --no-build
+            --configuration Release
 
       - name: Publish app
         run: dotnet publish AskFlow.WebAPI/AskFlow.WebAPI.csproj -c Release -o ${{ github.workspace }}/publish --no-build
@@ -74,10 +73,10 @@ jobs:
 
       - name: Apply
         env:
-          CONN: ${{ secrets.SQL_CONNECTION_STRING }}
+          ConnectionStrings__DefaultConnection: ${{ secrets.SQL_CONNECTION_STRING }}
         run: |
           chmod +x ./efbundle
-          ./efbundle --connection "$CONN"
+          ./efbundle --connection "$ConnectionStrings__DefaultConnection"
 
   deploy:
     name: Deploy to production
