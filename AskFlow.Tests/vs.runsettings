@@ -23,6 +23,7 @@
                 <Source>.*\\Mappings\\.*</Source>
                 <Source>.*\\Program\.cs$</Source>
                 <Source>.*\\AppDbContext\.cs$</Source>
+                <Source>.*\\AppDbContextDesignTimeFactory\.cs$</Source>
                 <Source>.*\\DependencyInjection\.cs$</Source>
                 <Source>.*\\JwtSettings\.cs$</Source>
               </Exclude>
