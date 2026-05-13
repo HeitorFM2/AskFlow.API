@@ -20,7 +20,10 @@ namespace AskFlow.WebAPI
                     "ConnectionStrings:DefaultConnection is not configured (env var or appsettings).");
 
             var options = new DbContextOptionsBuilder<AppDbContext>()
-                .UseSqlServer(connectionString)
+                .UseSqlServer(connectionString, sql => sql.EnableRetryOnFailure(
+                    maxRetryCount: 3,
+                    maxRetryDelay: TimeSpan.FromSeconds(30),
+                    errorNumbersToAdd: null))
                 .Options;
 
             return new AppDbContext(options);
