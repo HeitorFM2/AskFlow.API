@@ -25,7 +25,7 @@ namespace AskFlow.Infrastructure
                         maxRetryCount: 3,
                         maxRetryDelay: TimeSpan.FromSeconds(30),
                         errorNumbersToAdd: null))
-                .AddInterceptors(sp.GetRequiredService<AvatarCleanupInterceptor>()));
+                .AddInterceptors(sp.GetRequiredService<AvatarCleanupInterceptor>())); 
 
             services.Configure<JwtSettings>(
                 configuration.GetSection("JwtSettings"));
