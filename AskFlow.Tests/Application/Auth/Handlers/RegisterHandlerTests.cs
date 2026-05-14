@@ -19,17 +19,18 @@ namespace AskFlow.Tests.Application.Auth.Handlers
         private RegisterHandler CreateSut() => new(_userManager, _tokenService, _refreshTokens, _logger);
 
         [Fact]
-        public async Task Handle_WhenIdentityFails_ShouldReturnInvalid_WithJoinedErrors()
+        public async Task Handle_WhenIdentityFails_ShouldReturnInvalid_WithGenericMessage()
         {
             _userManager.CreateAsync(Arg.Any<User>(), Arg.Any<string>())
                 .Returns(IdentityResult.Failed(
-                    new IdentityError { Description = "Senha fraca" },
-                    new IdentityError { Description = "Email já em uso" }));
+                    new IdentityError { Description = "Email already taken" },
+                    new IdentityError { Description = "Weak password" }));
 
             var result = await CreateSut().Handle(new RegisterCommand("a@b.com", "1", "id"), default);
 
             result.Type.Should().Be(ResultType.Invalid);
-            result.Error.Should().Contain("Senha fraca").And.Contain("Email já em uso");
+            result.ErrorCode.Should().Be(ErrorCodes.AuthIdentityFailure);
+            result.Error.Should().NotContain("Email already taken").And.NotContain("Weak password");
         }
 
         [Fact]

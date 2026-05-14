@@ -10,16 +10,16 @@ namespace AskFlow.Tests.Application.Auth.Validators
         [Fact]
         public void Validate_ValidPayload_ShouldPass()
         {
-            var result = _sut.Validate(new RegisterCommand("user@askflow.com", "senha123", "ident"));
+            var result = _sut.Validate(new RegisterCommand("user@askflow.com", "Senha123", "ident"));
             result.IsValid.Should().BeTrue();
         }
 
         [Theory]
-        [InlineData("", "senha123", "ident")]
-        [InlineData("invalido", "senha123", "ident")]
+        [InlineData("", "Senha123", "ident")]
+        [InlineData("invalido", "Senha123", "ident")]
         [InlineData("user@askflow.com", "", "ident")]
-        [InlineData("user@askflow.com", "12345", "ident")]
-        [InlineData("user@askflow.com", "senha123", "")]
+        [InlineData("user@askflow.com", "Sen1a", "ident")]
+        [InlineData("user@askflow.com", "Senha123", "")]
         public void Validate_InvalidPayload_ShouldFail(string email, string password, string identification)
         {
             var result = _sut.Validate(new RegisterCommand(email, password, identification));
@@ -31,7 +31,7 @@ namespace AskFlow.Tests.Application.Auth.Validators
         {
             var longIdent = new string('a', 51);
 
-            var result = _sut.Validate(new RegisterCommand("user@askflow.com", "senha123", longIdent));
+            var result = _sut.Validate(new RegisterCommand("user@askflow.com", "Senha123", longIdent));
 
             result.IsValid.Should().BeFalse();
             result.Errors.Should().Contain(e => e.PropertyName == nameof(RegisterCommand.Identification)
@@ -41,8 +41,29 @@ namespace AskFlow.Tests.Application.Auth.Validators
         [Fact]
         public void Validate_PasswordTooShort_ShouldHaveExpectedErrorCode()
         {
-            var result = _sut.Validate(new RegisterCommand("user@askflow.com", "12345", "ident"));
+            var result = _sut.Validate(new RegisterCommand("user@askflow.com", "Aa1", "ident"));
             result.Errors.Should().Contain(e => e.ErrorCode == ErrorCodes.PasswordMinLength);
+        }
+
+        [Fact]
+        public void Validate_PasswordWithoutUppercase_ShouldHaveExpectedErrorCode()
+        {
+            var result = _sut.Validate(new RegisterCommand("user@askflow.com", "senha123", "ident"));
+            result.Errors.Should().Contain(e => e.ErrorCode == ErrorCodes.PasswordRequiresUppercase);
+        }
+
+        [Fact]
+        public void Validate_PasswordWithoutLowercase_ShouldHaveExpectedErrorCode()
+        {
+            var result = _sut.Validate(new RegisterCommand("user@askflow.com", "SENHA123", "ident"));
+            result.Errors.Should().Contain(e => e.ErrorCode == ErrorCodes.PasswordRequiresLowercase);
+        }
+
+        [Fact]
+        public void Validate_PasswordWithoutDigit_ShouldHaveExpectedErrorCode()
+        {
+            var result = _sut.Validate(new RegisterCommand("user@askflow.com", "SenhaSenha", "ident"));
+            result.Errors.Should().Contain(e => e.ErrorCode == ErrorCodes.PasswordRequiresDigit);
         }
     }
 }

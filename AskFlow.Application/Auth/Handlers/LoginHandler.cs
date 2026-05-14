@@ -11,6 +11,7 @@ namespace AskFlow.Application.Auth.Handlers
 {
     public class LoginHandler(
         UserManager<User> userManager,
+        IPasswordSignInService passwordSignInService,
         ITokenService tokenService,
         IRefreshTokenRepository refreshTokenRepository,
         ILogger<LoginHandler> logger) : IRequestHandler<LoginCommand, Result<AuthViewModel>>
@@ -19,9 +20,23 @@ namespace AskFlow.Application.Auth.Handlers
         {
             var user = await userManager.FindByEmailAsync(request.Email);
 
-            if (user is null || !await userManager.CheckPasswordAsync(user, request.Password))
+            if (user is null)
             {
-                logger.LogWarning("Invalid login attempt for {Email}.", request.Email);
+                logger.LogWarning("Invalid login attempt for unknown user.");
+                return Result<AuthViewModel>.Unauthorized(ErrorCodes.AuthInvalidCredentials, "Invalid email or password.");
+            }
+
+            var signInResult = await passwordSignInService.CheckPasswordAsync(user, request.Password, cancellationToken);
+
+            if (signInResult == PasswordSignInResult.LockedOut)
+            {
+                logger.LogWarning("Account locked out for user {UserId}.", user.Id);
+                return Result<AuthViewModel>.Unauthorized(ErrorCodes.AuthAccountLocked, "Account is temporarily locked due to failed login attempts.");
+            }
+
+            if (signInResult != PasswordSignInResult.Success)
+            {
+                logger.LogWarning("Invalid login attempt for user {UserId}.", user.Id);
                 return Result<AuthViewModel>.Unauthorized(ErrorCodes.AuthInvalidCredentials, "Invalid email or password.");
             }
 
@@ -35,7 +50,7 @@ namespace AskFlow.Application.Auth.Handlers
                 user,
                 DateTime.UtcNow.AddDays(tokenService.RefreshTokenExpiresInDays)));
 
-            logger.LogInformation("User {Email} authenticated successfully.", request.Email);
+            logger.LogInformation("User {UserId} authenticated successfully.", user.Id);
 
             return Result<AuthViewModel>.Success(new AuthViewModel
             {

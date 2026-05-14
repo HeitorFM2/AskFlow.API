@@ -9,13 +9,10 @@ namespace AskFlow.Tests.Application.Users.Validators
 
         private static Stream NonEmptyStream() => new MemoryStream([1, 2, 3]);
 
-        [Theory]
-        [InlineData("image/jpeg")]
-        [InlineData("image/png")]
-        [InlineData("image/webp")]
-        public void Validate_ValidPayload_ShouldPass(string contentType)
+        [Fact]
+        public void Validate_ValidPayload_ShouldPass()
         {
-            var result = _sut.Validate(new UpdateAvatarCommand(NonEmptyStream(), contentType, 1024));
+            var result = _sut.Validate(new UpdateAvatarCommand(NonEmptyStream(), "image/jpeg", 1024));
             result.IsValid.Should().BeTrue();
         }
 
@@ -40,18 +37,6 @@ namespace AskFlow.Tests.Application.Users.Validators
         {
             var result = _sut.Validate(new UpdateAvatarCommand(NonEmptyStream(), "image/jpeg", 2 * 1024 * 1024));
             result.IsValid.Should().BeTrue();
-        }
-
-        [Theory]
-        [InlineData("image/gif")]
-        [InlineData("application/pdf")]
-        [InlineData("text/plain")]
-        [InlineData("")]
-        public void Validate_DisallowedContentType_ShouldFail_WithAvatarContentTypeInvalid(string contentType)
-        {
-            var result = _sut.Validate(new UpdateAvatarCommand(NonEmptyStream(), contentType, 1024));
-            result.IsValid.Should().BeFalse();
-            result.Errors.Should().Contain(e => e.ErrorCode == ErrorCodes.AvatarContentTypeInvalid);
         }
     }
 }

@@ -5,7 +5,9 @@ namespace AskFlow.Application.Common
         Ok,
         NotFound,
         Unauthorized,
+        Forbidden,
         Invalid,
+        Conflict,
         Failure
     }
 }
