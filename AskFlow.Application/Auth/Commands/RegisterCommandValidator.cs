@@ -13,7 +13,10 @@ namespace AskFlow.Application.Auth.Commands
 
             RuleFor(x => x.Password)
                 .NotEmpty().WithErrorCode(ErrorCodes.PasswordRequired).WithMessage("Password is required.")
-                .MinimumLength(6).WithErrorCode(ErrorCodes.PasswordMinLength).WithMessage("Password must be at least 6 characters long.");
+                .MinimumLength(8).WithErrorCode(ErrorCodes.PasswordMinLength).WithMessage("Password must be at least 8 characters long.")
+                .Matches("[A-Z]").WithErrorCode(ErrorCodes.PasswordRequiresUppercase).WithMessage("Password must contain at least one uppercase letter.")
+                .Matches("[a-z]").WithErrorCode(ErrorCodes.PasswordRequiresLowercase).WithMessage("Password must contain at least one lowercase letter.")
+                .Matches("[0-9]").WithErrorCode(ErrorCodes.PasswordRequiresDigit).WithMessage("Password must contain at least one digit.");
 
             RuleFor(x => x.Identification)
                 .NotEmpty().WithErrorCode(ErrorCodes.IdentificationRequired).WithMessage("Identification is required.")

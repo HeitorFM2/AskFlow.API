@@ -19,10 +19,17 @@ namespace AskFlow.Application.Auth.Handlers
             if (refreshToken is null)
                 return Result<AuthViewModel>.Unauthorized(ErrorCodes.AuthRefreshTokenInvalid, "Invalid refresh token.");
 
-            if (!refreshToken.IsActive)
+            if (refreshToken.IsRevoked)
             {
-                logger.LogWarning("Inactive refresh token used by user {UserId}.", refreshToken.UserId);
-                return Result<AuthViewModel>.Unauthorized(ErrorCodes.AuthRefreshTokenExpiredOrRevoked, "Refresh token expired or revoked.");
+                logger.LogWarning("Refresh token reuse detected for user {UserId}. Revoking all active tokens.", refreshToken.UserId);
+                await refreshTokenRepository.RevokeAllByUserIdAsync(refreshToken.UserId);
+                return Result<AuthViewModel>.Unauthorized(ErrorCodes.AuthRefreshTokenReuseDetected, "Refresh token reuse detected.");
+            }
+
+            if (refreshToken.IsExpired)
+            {
+                logger.LogWarning("Expired refresh token used by user {UserId}.", refreshToken.UserId);
+                return Result<AuthViewModel>.Unauthorized(ErrorCodes.AuthRefreshTokenExpiredOrRevoked, "Refresh token expired.");
             }
 
             refreshToken.Revoke();
