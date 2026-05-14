@@ -21,7 +21,7 @@ namespace AskFlow.Application.Comments.Handlers
                 return Result.NotFound(ErrorCodes.CommentNotFound, "Comment not found.");
 
             if (comment.UserId != userId)
-                return Result.Unauthorized(ErrorCodes.CommentNoPermissionToDelete, "No permission to delete this comment.");
+                return Result.Forbidden(ErrorCodes.CommentNoPermissionToDelete, "No permission to delete this comment.");
 
             await repository.DeleteAsync(comment, cancellationToken);
             return Result.Success();

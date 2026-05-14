@@ -1,5 +1,6 @@
 using AskFlow.Application.Common;
 using AskFlow.WebAPI.Extensions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AskFlow.Tests.WebAPI.Extensions
@@ -32,6 +33,13 @@ namespace AskFlow.Tests.WebAPI.Extensions
         }
 
         [Fact]
+        public void Result_Forbidden_ShouldReturn403()
+        {
+            var action = Result.Forbidden("X", "nope").ToActionResult(_controller);
+            action.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(StatusCodes.Status403Forbidden);
+        }
+
+        [Fact]
         public void Result_Invalid_ShouldReturn400()
         {
             var action = Result.Invalid("X", "ruim").ToActionResult(_controller);
@@ -39,10 +47,17 @@ namespace AskFlow.Tests.WebAPI.Extensions
         }
 
         [Fact]
+        public void Result_Conflict_ShouldReturn409()
+        {
+            var action = Result.Conflict("X", "dup").ToActionResult(_controller);
+            action.Should().BeOfType<ConflictObjectResult>();
+        }
+
+        [Fact]
         public void Result_Failure_ShouldReturn500()
         {
             var action = Result.Failure("X", "boom").ToActionResult(_controller);
-            action.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(500);
+            action.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
         }
 
         [Fact]
@@ -56,6 +71,7 @@ namespace AskFlow.Tests.WebAPI.Extensions
         [InlineData(ResultType.NotFound, typeof(NotFoundObjectResult))]
         [InlineData(ResultType.Unauthorized, typeof(UnauthorizedObjectResult))]
         [InlineData(ResultType.Invalid, typeof(BadRequestObjectResult))]
+        [InlineData(ResultType.Conflict, typeof(ConflictObjectResult))]
         public void GenericResult_Failures_ShouldMapToCorrectActionResult(ResultType type, Type expected)
         {
             Result<int> result = type switch
@@ -63,6 +79,7 @@ namespace AskFlow.Tests.WebAPI.Extensions
                 ResultType.NotFound => Result<int>.NotFound("C", "e"),
                 ResultType.Unauthorized => Result<int>.Unauthorized("C", "e"),
                 ResultType.Invalid => Result<int>.Invalid("C", "e"),
+                ResultType.Conflict => Result<int>.Conflict("C", "e"),
                 _ => throw new ArgumentOutOfRangeException()
             };
 
@@ -70,10 +87,17 @@ namespace AskFlow.Tests.WebAPI.Extensions
         }
 
         [Fact]
+        public void GenericResult_Forbidden_ShouldReturn403()
+        {
+            var action = Result<int>.Forbidden("C", "nope").ToActionResult(_controller);
+            action.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(StatusCodes.Status403Forbidden);
+        }
+
+        [Fact]
         public void GenericResult_Failure_ShouldReturn500()
         {
             var action = Result<int>.Failure("C", "boom").ToActionResult(_controller);
-            action.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(500);
+            action.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
         }
     }
 }

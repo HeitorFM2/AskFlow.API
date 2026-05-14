@@ -26,7 +26,7 @@ namespace AskFlow.Application.Posts.Handlers
             if (post.UserId != userId)
             {
                 logger.LogWarning("User {UserId} attempted to delete post {PostId} without permission.", userId, command.PostId);
-                return Result.Unauthorized(ErrorCodes.PostNoPermissionToDelete, "You do not have permission to delete this post.");
+                return Result.Forbidden(ErrorCodes.PostNoPermissionToDelete, "You do not have permission to delete this post.");
             }
 
             await repository.DeleteAsync(post);

@@ -36,7 +36,7 @@ namespace AskFlow.Tests.Application.Comments.Handlers
         }
 
         [Fact]
-        public async Task Handle_OwnedByOtherUser_ShouldReturnUnauthorized()
+        public async Task Handle_OwnedByOtherUser_ShouldReturnForbidden()
         {
             var c = new CommentBuilder().WithUserId("other").Build();
             _repo.GetByIdAsync(Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns(c);
@@ -44,7 +44,7 @@ namespace AskFlow.Tests.Application.Comments.Handlers
 
             var result = await sut.Handle(new DeleteCommentCommand(1), default);
 
-            result.Type.Should().Be(ResultType.Unauthorized);
+            result.Type.Should().Be(ResultType.Forbidden);
             result.ErrorCode.Should().Be(ErrorCodes.CommentNoPermissionToDelete);
             await _repo.DidNotReceive().DeleteAsync(Arg.Any<Comment>(), Arg.Any<CancellationToken>());
         }
