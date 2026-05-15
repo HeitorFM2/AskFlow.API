@@ -14,9 +14,10 @@ namespace AskFlow.Tests.Application.Auth.Handlers
         private readonly UserManager<User> _userManager = UserManagerFixture.Create();
         private readonly ITokenService _tokenService = Substitute.For<ITokenService>();
         private readonly IRefreshTokenRepository _refreshTokens = Substitute.For<IRefreshTokenRepository>();
+        private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
         private readonly ILogger<RegisterHandler> _logger = Substitute.For<ILogger<RegisterHandler>>();
 
-        private RegisterHandler CreateSut() => new(_userManager, _tokenService, _refreshTokens, _logger);
+        private RegisterHandler CreateSut() => new(_userManager, _tokenService, _refreshTokens, _unitOfWork, _logger);
 
         [Fact]
         public async Task Handle_WhenIdentityFails_ShouldReturnInvalid_WithGenericMessage()
@@ -51,7 +52,8 @@ namespace AskFlow.Tests.Application.Auth.Handlers
             result.Value.ExpiresAt.Should().Be(expiry);
             result.Value.User.Email.Should().Be("a@b.com");
             result.Value.User.Identification.Should().Be("id");
-            await _refreshTokens.Received(1).AddAsync(Arg.Is<RefreshToken>(t => t.TokenHash == RefreshToken.HashToken("ref")));
+            _refreshTokens.Received(1).Add(Arg.Is<RefreshToken>(t => t.TokenHash == RefreshToken.HashToken("ref")));
+            await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
         }
     }
 }

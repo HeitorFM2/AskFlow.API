@@ -11,12 +11,14 @@ namespace AskFlow.Tests.Application.Auth.Handlers
         public async Task Handle_ShouldRevokeAllTokens_ForUser()
         {
             var repo = Substitute.For<IRefreshTokenRepository>();
-            var sut = new LogoutHandler(repo);
+            var uow = Substitute.For<IUnitOfWork>();
+            var sut = new LogoutHandler(repo, uow);
 
             var result = await sut.Handle(new LogoutCommand("user-1"), default);
 
             result.Type.Should().Be(ResultType.Ok);
-            await repo.Received(1).RevokeAllByUserIdAsync("user-1");
+            await repo.Received(1).RevokeAllByUserIdAsync("user-1", Arg.Any<CancellationToken>());
+            await uow.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
         }
     }
 }

@@ -17,7 +17,20 @@ namespace AskFlow.Infrastructure.Data.Mappings
             builder.Property(p => p.CreatedAt)
                 .IsRequired();
 
+            builder.Property(p => p.CommentCount)
+                .IsRequired()
+                .HasDefaultValue(0);
+
+            builder.Property(p => p.LikeCount)
+                .IsRequired()
+                .HasDefaultValue(0);
+
             builder.HasQueryFilter(p => !p.IsDeleted);
+
+            builder.HasIndex(p => p.CreatedAt)
+                .IsDescending()
+                .HasFilter("[IsDeleted] = 0")
+                .HasDatabaseName("IX_Posts_CreatedAt_Active");
 
             builder.HasMany(p => p.Comments)
                 .WithOne(c => c.Post)

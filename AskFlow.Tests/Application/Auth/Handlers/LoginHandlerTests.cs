@@ -16,9 +16,10 @@ namespace AskFlow.Tests.Application.Auth.Handlers
         private readonly IPasswordSignInService _passwordSignIn = Substitute.For<IPasswordSignInService>();
         private readonly ITokenService _tokenService = Substitute.For<ITokenService>();
         private readonly IRefreshTokenRepository _refreshTokens = Substitute.For<IRefreshTokenRepository>();
+        private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
         private readonly ILogger<LoginHandler> _logger = Substitute.For<ILogger<LoginHandler>>();
 
-        private LoginHandler CreateSut() => new(_userManager, _passwordSignIn, _tokenService, _refreshTokens, _logger);
+        private LoginHandler CreateSut() => new(_userManager, _passwordSignIn, _tokenService, _refreshTokens, _unitOfWork, _logger);
 
         [Fact]
         public async Task Handle_WhenUserNotFound_ShouldReturnUnauthorized()
@@ -57,7 +58,7 @@ namespace AskFlow.Tests.Application.Auth.Handlers
 
             result.Type.Should().Be(ResultType.Unauthorized);
             result.ErrorCode.Should().Be(ErrorCodes.AuthAccountLocked);
-            await _refreshTokens.DidNotReceive().AddAsync(Arg.Any<RefreshToken>());
+            _refreshTokens.DidNotReceive().Add(Arg.Any<RefreshToken>());
         }
 
         [Fact]
@@ -82,8 +83,9 @@ namespace AskFlow.Tests.Application.Auth.Handlers
             result.Value.User.Email.Should().Be(user.Email);
             result.Value.User.Id.Should().Be(user.Id);
             result.Value.User.Identification.Should().Be(user.Identification);
-            await _refreshTokens.Received(1).RevokeAllByUserIdAsync(user.Id);
-            await _refreshTokens.Received(1).AddAsync(Arg.Is<RefreshToken>(t => t.TokenHash == RefreshToken.HashToken("refresh")));
+            await _refreshTokens.Received(1).RevokeAllByUserIdAsync(user.Id, Arg.Any<CancellationToken>());
+            _refreshTokens.Received(1).Add(Arg.Is<RefreshToken>(t => t.TokenHash == RefreshToken.HashToken("refresh")));
+            await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
         }
     }
 }

@@ -7,6 +7,9 @@ namespace AskFlow.Domain.Entities
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
 
+        public int CommentCount { get; private set; }
+        public int LikeCount { get; private set; }
+
         public bool IsDeleted { get; private set; }
         public DateTime? DeletedAt { get; private set; }
 
@@ -29,6 +32,20 @@ namespace AskFlow.Domain.Entities
         {
             IsDeleted = true;
             DeletedAt = DateTime.UtcNow;
+        }
+
+        public void IncrementCommentCount() => CommentCount++;
+
+        public void DecrementCommentCount()
+        {
+            if (CommentCount > 0) CommentCount--;
+        }
+
+        public void IncrementLikeCount() => LikeCount++;
+
+        public void DecrementLikeCount()
+        {
+            if (LikeCount > 0) LikeCount--;
         }
     }
 }

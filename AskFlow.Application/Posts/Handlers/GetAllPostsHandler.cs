@@ -7,20 +7,20 @@ using MediatR;
 namespace AskFlow.Application.Posts.Handlers
 {
     public class GetAllPostsHandler(
-        IPostRepository postRepository,
-        ILikeRepository likeRepository,
+        IPostQueries postQueries,
+        ILikeQueries likeQueries,
         ICurrentUserService currentUserService)
         : IRequestHandler<GetAllPostsQuery, Result<PagedResult<PostsViewModel>>>
     {
         public async Task<Result<PagedResult<PostsViewModel>>> Handle(GetAllPostsQuery request, CancellationToken cancellationToken)
         {
-            var totalCount = await postRepository.CountAsync(cancellationToken);
-            var posts = await postRepository.GetAllAsync(request.Page, request.PageSize, cancellationToken);
+            var totalCount = await postQueries.CountAsync(cancellationToken);
+            var posts = await postQueries.GetAllAsync(request.Page, request.PageSize, cancellationToken);
 
             var userId = currentUserService.GetUserId();
             if (!string.IsNullOrEmpty(userId) && posts.Count > 0)
             {
-                var likedIds = await likeRepository.GetLikedPostIdsAsync(userId, posts.Select(p => p.Id), cancellationToken);
+                var likedIds = await likeQueries.GetLikedPostIdsAsync(userId, posts.Select(p => p.Id), cancellationToken);
                 foreach (var post in posts)
                     post.IsLiked = likedIds.Contains(post.Id);
             }

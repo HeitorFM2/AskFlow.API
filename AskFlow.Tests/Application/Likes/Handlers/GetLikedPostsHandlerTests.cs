@@ -9,18 +9,18 @@ namespace AskFlow.Tests.Application.Likes.Handlers
 {
     public class GetLikedPostsHandlerTests
     {
-        private readonly ILikeRepository _repo = Substitute.For<ILikeRepository>();
+        private readonly ILikeQueries _queries = Substitute.For<ILikeQueries>();
 
         [Fact]
         public async Task Handle_Unauthenticated_ShouldReturnUnauthorized()
         {
-            var sut = new GetLikedPostsHandler(_repo, HttpContextFixture.CreateUnauthenticated());
+            var sut = new GetLikedPostsHandler(_queries, HttpContextFixture.CreateUnauthenticated());
 
             var result = await sut.Handle(new GetLikedPostsQuery(), default);
 
             result.Type.Should().Be(ResultType.Unauthorized);
             result.ErrorCode.Should().Be(ErrorCodes.UserNotAuthenticated);
-            await _repo.DidNotReceive().GetLikePostsAsync(
+            await _queries.DidNotReceive().GetLikePostsAsync(
                 Arg.Any<string>(), Arg.Any<int>(), Arg.Any<int>(), Arg.Any<CancellationToken>());
         }
 
@@ -39,11 +39,11 @@ namespace AskFlow.Tests.Application.Likes.Handlers
                 AuthorIdentification = "john_doe"
             };
 
-            _repo.CountLikedPostAsync(userId, Arg.Any<CancellationToken>()).Returns(1);
-            _repo.GetLikePostsAsync(userId, 1, 20, Arg.Any<CancellationToken>())
+            _queries.CountLikedPostAsync(userId, Arg.Any<CancellationToken>()).Returns(1);
+            _queries.GetLikePostsAsync(userId, 1, 20, Arg.Any<CancellationToken>())
                 .Returns(new List<LikedPostDto> { dto });
 
-            var sut = new GetLikedPostsHandler(_repo, HttpContextFixture.CreateAuthenticated(userId));
+            var sut = new GetLikedPostsHandler(_queries, HttpContextFixture.CreateAuthenticated(userId));
             var result = await sut.Handle(new GetLikedPostsQuery(1, 20), default);
 
             result.IsSuccess.Should().BeTrue();
@@ -66,11 +66,11 @@ namespace AskFlow.Tests.Application.Likes.Handlers
         public async Task Handle_Authenticated_EmptyLikes_ShouldReturnEmptyPagedResult()
         {
             const string userId = "user-1";
-            _repo.CountLikedPostAsync(userId, Arg.Any<CancellationToken>()).Returns(0);
-            _repo.GetLikePostsAsync(userId, 1, 20, Arg.Any<CancellationToken>())
+            _queries.CountLikedPostAsync(userId, Arg.Any<CancellationToken>()).Returns(0);
+            _queries.GetLikePostsAsync(userId, 1, 20, Arg.Any<CancellationToken>())
                 .Returns(new List<LikedPostDto>());
 
-            var sut = new GetLikedPostsHandler(_repo, HttpContextFixture.CreateAuthenticated(userId));
+            var sut = new GetLikedPostsHandler(_queries, HttpContextFixture.CreateAuthenticated(userId));
             var result = await sut.Handle(new GetLikedPostsQuery(1, 20), default);
 
             result.IsSuccess.Should().BeTrue();
@@ -79,17 +79,17 @@ namespace AskFlow.Tests.Application.Likes.Handlers
         }
 
         [Fact]
-        public async Task Handle_Authenticated_ShouldPassPageParams_ToRepository()
+        public async Task Handle_Authenticated_ShouldPassPageParams_ToQueries()
         {
             const string userId = "user-1";
-            _repo.CountLikedPostAsync(userId, Arg.Any<CancellationToken>()).Returns(0);
-            _repo.GetLikePostsAsync(userId, 3, 10, Arg.Any<CancellationToken>())
+            _queries.CountLikedPostAsync(userId, Arg.Any<CancellationToken>()).Returns(0);
+            _queries.GetLikePostsAsync(userId, 3, 10, Arg.Any<CancellationToken>())
                 .Returns(new List<LikedPostDto>());
 
-            var sut = new GetLikedPostsHandler(_repo, HttpContextFixture.CreateAuthenticated(userId));
+            var sut = new GetLikedPostsHandler(_queries, HttpContextFixture.CreateAuthenticated(userId));
             await sut.Handle(new GetLikedPostsQuery(3, 10), default);
 
-            await _repo.Received(1).GetLikePostsAsync(userId, 3, 10, Arg.Any<CancellationToken>());
+            await _queries.Received(1).GetLikePostsAsync(userId, 3, 10, Arg.Any<CancellationToken>());
         }
 
         [Fact]
@@ -105,10 +105,10 @@ namespace AskFlow.Tests.Application.Likes.Handlers
                 AuthorIdentification = "u_ident"
             }).ToList();
 
-            _repo.CountLikedPostAsync(userId, Arg.Any<CancellationToken>()).Returns(3);
-            _repo.GetLikePostsAsync(userId, 1, 20, Arg.Any<CancellationToken>()).Returns(dtos);
+            _queries.CountLikedPostAsync(userId, Arg.Any<CancellationToken>()).Returns(3);
+            _queries.GetLikePostsAsync(userId, 1, 20, Arg.Any<CancellationToken>()).Returns(dtos);
 
-            var sut = new GetLikedPostsHandler(_repo, HttpContextFixture.CreateAuthenticated(userId));
+            var sut = new GetLikedPostsHandler(_queries, HttpContextFixture.CreateAuthenticated(userId));
             var result = await sut.Handle(new GetLikedPostsQuery(1, 20), default);
 
             result.Value!.Items.Should().AllSatisfy(p => p.IsLiked.Should().BeTrue());

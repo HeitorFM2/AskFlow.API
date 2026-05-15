@@ -8,6 +8,7 @@ namespace AskFlow.Application.Posts.Handlers
 {
     public class DeletePostHandler(
         IPostRepository repository,
+        IUnitOfWork unitOfWork,
         ICurrentUserService currentUserService,
         ILogger<DeletePostHandler> logger) : IRequestHandler<DeletePostCommand, Result>
     {
@@ -18,7 +19,7 @@ namespace AskFlow.Application.Posts.Handlers
             if (string.IsNullOrEmpty(userId))
                 return Result.Unauthorized(ErrorCodes.UserNotAuthenticated, "User not authenticated.");
 
-            var post = await repository.FindByIdAsync(command.PostId);
+            var post = await repository.FindByIdAsync(command.PostId, cancellationToken);
 
             if (post is null)
                 return Result.NotFound(ErrorCodes.PostNotFound, "Post not found.");
@@ -29,7 +30,8 @@ namespace AskFlow.Application.Posts.Handlers
                 return Result.Forbidden(ErrorCodes.PostNoPermissionToDelete, "You do not have permission to delete this post.");
             }
 
-            await repository.DeleteAsync(post);
+            repository.Delete(post);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
 
             logger.LogInformation("Post {PostId} deleted by user {UserId}.", command.PostId, userId);
 

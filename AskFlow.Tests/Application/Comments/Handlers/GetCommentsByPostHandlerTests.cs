@@ -15,12 +15,12 @@ namespace AskFlow.Tests.Application.Comments.Handlers
             var c1 = new CommentViewModel { Id = 1, Content = "c1", CreatedAt = DateTime.UtcNow, ReplyCount = 3, User = user };
             var c2 = new CommentViewModel { Id = 2, Content = "c2", CreatedAt = DateTime.UtcNow, ReplyCount = 0, User = user };
 
-            var repo = Substitute.For<ICommentRepository>();
-            repo.CountByPostAsync(10, Arg.Any<CancellationToken>()).Returns(2);
-            repo.GetByPostAsync(10, 1, 20, Arg.Any<CancellationToken>())
+            var queries = Substitute.For<ICommentQueries>();
+            queries.CountByPostAsync(10, Arg.Any<CancellationToken>()).Returns(2);
+            queries.GetByPostAsync(10, 1, 20, Arg.Any<CancellationToken>())
                 .Returns(new List<CommentViewModel> { c1, c2 });
 
-            var sut = new GetCommentsByPostHandler(repo);
+            var sut = new GetCommentsByPostHandler(queries);
             var result = await sut.Handle(new GetCommentsByPostQuery(10), default);
 
             result.IsSuccess.Should().BeTrue();

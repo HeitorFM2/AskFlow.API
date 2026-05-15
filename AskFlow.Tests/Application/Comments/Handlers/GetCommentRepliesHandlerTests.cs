@@ -14,12 +14,12 @@ namespace AskFlow.Tests.Application.Comments.Handlers
             var user = new UserDto { UserName = "bob", Identification = "bob" };
             var r1 = new CommentViewModel { Id = 11, Content = "reply", CreatedAt = DateTime.UtcNow, ParentCommentId = 10, ReplyCount = 2, User = user };
 
-            var repo = Substitute.For<ICommentRepository>();
-            repo.CountRepliesAsync(10, Arg.Any<CancellationToken>()).Returns(1);
-            repo.GetRepliesAsync(10, 1, 20, Arg.Any<CancellationToken>())
+            var queries = Substitute.For<ICommentQueries>();
+            queries.CountRepliesAsync(10, Arg.Any<CancellationToken>()).Returns(1);
+            queries.GetRepliesAsync(10, 1, 20, Arg.Any<CancellationToken>())
                 .Returns(new List<CommentViewModel> { r1 });
 
-            var sut = new GetCommentRepliesHandler(repo);
+            var sut = new GetCommentRepliesHandler(queries);
             var result = await sut.Handle(new GetCommentRepliesQuery(10), default);
 
             result.IsSuccess.Should().BeTrue();

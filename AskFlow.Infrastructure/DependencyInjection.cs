@@ -25,7 +25,7 @@ namespace AskFlow.Infrastructure
                         maxRetryCount: 3,
                         maxRetryDelay: TimeSpan.FromSeconds(30),
                         errorNumbersToAdd: null))
-                .AddInterceptors(sp.GetRequiredService<AvatarCleanupInterceptor>()));
+                .AddInterceptors(sp.GetRequiredService<AvatarCleanupInterceptor>())); 
 
             services.Configure<JwtSettings>(
                 configuration.GetSection("JwtSettings"));
@@ -33,15 +33,20 @@ namespace AskFlow.Infrastructure
             services.Configure<BlobStorageSettings>(
                 configuration.GetSection("BlobStorage"));
 
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddScoped<IPasswordSignInService, IdentityPasswordSignInService>();
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IAvatarStorage, AzureBlobAvatarStorage>();
             services.AddSingleton<IImageProcessor, ImageSharpAvatarProcessor>();
+
             services.AddScoped<IPostRepository, PostRepository>();
+            services.AddScoped<IPostQueries, PostQueries>();
             services.AddScoped<ICommentRepository, CommentRepository>();
-            services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+            services.AddScoped<ICommentQueries, CommentQueries>();
             services.AddScoped<ILikeRepository, LikeRepository>();
+            services.AddScoped<ILikeQueries, LikeQueries>();
+            services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
             services.AddHostedService<RefreshTokenCleanupService>();
 

@@ -14,6 +14,7 @@ namespace AskFlow.Application.Auth.Handlers
         IPasswordSignInService passwordSignInService,
         ITokenService tokenService,
         IRefreshTokenRepository refreshTokenRepository,
+        IUnitOfWork unitOfWork,
         ILogger<LoginHandler> logger) : IRequestHandler<LoginCommand, Result<AuthViewModel>>
     {
         public async Task<Result<AuthViewModel>> Handle(LoginCommand request, CancellationToken cancellationToken)
@@ -40,15 +41,17 @@ namespace AskFlow.Application.Auth.Handlers
                 return Result<AuthViewModel>.Unauthorized(ErrorCodes.AuthInvalidCredentials, "Invalid email or password.");
             }
 
-            await refreshTokenRepository.RevokeAllByUserIdAsync(user.Id);
+            await refreshTokenRepository.RevokeAllByUserIdAsync(user.Id, cancellationToken);
 
             var accessToken = tokenService.GenerateAccessToken(user);
             var refreshToken = tokenService.GenerateRefreshToken();
 
-            await refreshTokenRepository.AddAsync(new RefreshToken(
+            refreshTokenRepository.Add(new RefreshToken(
                 refreshToken,
                 user,
                 DateTime.UtcNow.AddDays(tokenService.RefreshTokenExpiresInDays)));
+
+            await unitOfWork.SaveChangesAsync(cancellationToken);
 
             logger.LogInformation("User {UserId} authenticated successfully.", user.Id);
 
