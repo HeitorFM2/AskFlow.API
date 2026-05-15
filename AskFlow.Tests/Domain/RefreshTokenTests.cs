@@ -22,6 +22,20 @@ namespace AskFlow.Tests.Domain
         }
 
         [Fact]
+        public void ParameterlessConstructor_ShouldCreateInstance_WithDefaults()
+        {
+            var token = (RefreshToken)Activator.CreateInstance(typeof(RefreshToken), nonPublic: true)!;
+
+            token.Should().NotBeNull();
+            token.Id.Should().Be(0);
+            token.TokenHash.Should().BeEmpty();
+            token.UserId.Should().BeEmpty();
+            token.IsRevoked.Should().BeFalse();
+            token.ExpiresAt.Should().Be(default);
+            token.CreatedAt.Should().Be(default);
+        }
+
+        [Fact]
         public void IsActive_ShouldBeTrue_WhenNotRevoked_AndNotExpired()
         {
             var token = new RefreshTokenBuilder()
