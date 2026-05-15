@@ -12,14 +12,15 @@ namespace AskFlow.Tests.Application.Auth.Handlers
     {
         private readonly IRefreshTokenRepository _refreshTokens = Substitute.For<IRefreshTokenRepository>();
         private readonly ITokenService _tokenService = Substitute.For<ITokenService>();
+        private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
         private readonly ILogger<RefreshTokenHandler> _logger = Substitute.For<ILogger<RefreshTokenHandler>>();
 
-        private RefreshTokenHandler CreateSut() => new(_refreshTokens, _tokenService, _logger);
+        private RefreshTokenHandler CreateSut() => new(_refreshTokens, _tokenService, _unitOfWork, _logger);
 
         [Fact]
         public async Task Handle_TokenNotFound_ShouldReturnUnauthorized()
         {
-            _refreshTokens.GetByTokenAsync("missing").Returns((RefreshToken?)null);
+            _refreshTokens.GetByTokenAsync("missing", Arg.Any<CancellationToken>()).Returns((RefreshToken?)null);
 
             var result = await CreateSut().Handle(new RefreshTokenCommand("missing"), default);
 
@@ -31,7 +32,7 @@ namespace AskFlow.Tests.Application.Auth.Handlers
         public async Task Handle_TokenExpired_ShouldReturnUnauthorized()
         {
             var token = new RefreshTokenBuilder().WithExpiresAt(DateTime.UtcNow.AddDays(-1)).Build();
-            _refreshTokens.GetByTokenAsync(Arg.Any<string>()).Returns(token);
+            _refreshTokens.GetByTokenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(token);
 
             var result = await CreateSut().Handle(new RefreshTokenCommand("x"), default);
 
@@ -48,14 +49,15 @@ namespace AskFlow.Tests.Application.Auth.Handlers
                 .WithExpiresAt(DateTime.UtcNow.AddDays(2))
                 .Revoked()
                 .Build();
-            _refreshTokens.GetByTokenAsync(Arg.Any<string>()).Returns(token);
+            _refreshTokens.GetByTokenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(token);
 
             var result = await CreateSut().Handle(new RefreshTokenCommand("x"), default);
 
             result.Type.Should().Be(ResultType.Unauthorized);
             result.ErrorCode.Should().Be(ErrorCodes.AuthRefreshTokenReuseDetected);
-            await _refreshTokens.Received(1).RevokeAllByUserIdAsync(user.Id);
-            await _refreshTokens.DidNotReceive().AddAsync(Arg.Any<RefreshToken>());
+            await _refreshTokens.Received(1).RevokeAllByUserIdAsync(user.Id, Arg.Any<CancellationToken>());
+            _refreshTokens.DidNotReceive().Add(Arg.Any<RefreshToken>());
+            await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
         }
 
         [Fact]
@@ -66,7 +68,7 @@ namespace AskFlow.Tests.Application.Auth.Handlers
                 .WithUser(user)
                 .WithExpiresAt(DateTime.UtcNow.AddDays(2))
                 .Build();
-            _refreshTokens.GetByTokenAsync(Arg.Any<string>()).Returns(token);
+            _refreshTokens.GetByTokenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(token);
             _tokenService.GenerateAccessToken(user).Returns("new-access");
             _tokenService.GenerateRefreshToken().Returns("new-refresh");
             _tokenService.RefreshTokenExpiresInDays.Returns(7);
@@ -80,7 +82,8 @@ namespace AskFlow.Tests.Application.Auth.Handlers
             result.Value.RefreshToken.Should().Be("new-refresh");
             result.Value.User.Id.Should().Be(user.Id);
             token.IsRevoked.Should().BeTrue();
-            await _refreshTokens.Received(1).AddAsync(Arg.Is<RefreshToken>(t => t.TokenHash == RefreshToken.HashToken("new-refresh")));
+            _refreshTokens.Received(1).Add(Arg.Is<RefreshToken>(t => t.TokenHash == RefreshToken.HashToken("new-refresh")));
+            await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
         }
     }
 }

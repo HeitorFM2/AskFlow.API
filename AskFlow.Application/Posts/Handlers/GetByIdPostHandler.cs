@@ -7,14 +7,14 @@ using MediatR;
 namespace AskFlow.Application.Posts.Handlers
 {
     public class GetByIdPostHandler(
-        IPostRepository postRepository,
-        ILikeRepository likeRepository,
+        IPostQueries postQueries,
+        ILikeQueries likeQueries,
         ICurrentUserService currentUserService)
         : IRequestHandler<GetByIdPostQuery, Result<PostViewModel>>
     {
         public async Task<Result<PostViewModel>> Handle(GetByIdPostQuery request, CancellationToken cancellationToken)
         {
-            var post = await postRepository.GetByIdAsync(request.postId);
+            var post = await postQueries.GetByIdAsync(request.postId, cancellationToken);
 
             if (post is null)
                 return Result<PostViewModel>.NotFound(ErrorCodes.PostNotFound, "Post not found.");
@@ -22,7 +22,7 @@ namespace AskFlow.Application.Posts.Handlers
             var userId = currentUserService.GetUserId();
             if (!string.IsNullOrEmpty(userId))
             {
-                var likedIds = await likeRepository.GetLikedPostIdsAsync(userId, [post.Id], cancellationToken);
+                var likedIds = await likeQueries.GetLikedPostIdsAsync(userId, [post.Id], cancellationToken);
                 post.IsLiked = likedIds.Contains(post.Id);
             }
 

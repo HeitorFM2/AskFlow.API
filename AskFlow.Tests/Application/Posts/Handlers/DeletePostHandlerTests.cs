@@ -12,25 +12,26 @@ namespace AskFlow.Tests.Application.Posts.Handlers
     public class DeletePostHandlerTests
     {
         private readonly IPostRepository _repository = Substitute.For<IPostRepository>();
+        private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
         private readonly ILogger<DeletePostHandler> _logger = Substitute.For<ILogger<DeletePostHandler>>();
 
         [Fact]
         public async Task Handle_NoUser_ShouldReturnUnauthorized()
         {
-            var sut = new DeletePostHandler(_repository, HttpContextFixture.CreateUnauthenticated(), _logger);
+            var sut = new DeletePostHandler(_repository, _unitOfWork, HttpContextFixture.CreateUnauthenticated(), _logger);
 
             var result = await sut.Handle(new DeletePostCommand(1), default);
 
             result.Type.Should().Be(ResultType.Unauthorized);
             result.ErrorCode.Should().Be(ErrorCodes.UserNotAuthenticated);
-            await _repository.DidNotReceive().DeleteAsync(Arg.Any<Post>());
+            _repository.DidNotReceive().Delete(Arg.Any<Post>());
         }
 
         [Fact]
         public async Task Handle_PostNotFound_ShouldReturnNotFound()
         {
-            _repository.FindByIdAsync(1).Returns((Post?)null);
-            var sut = new DeletePostHandler(_repository, HttpContextFixture.CreateAuthenticated("user-1"), _logger);
+            _repository.FindByIdAsync(1, Arg.Any<CancellationToken>()).Returns((Post?)null);
+            var sut = new DeletePostHandler(_repository, _unitOfWork, HttpContextFixture.CreateAuthenticated("user-1"), _logger);
 
             var result = await sut.Handle(new DeletePostCommand(1), default);
 
@@ -42,27 +43,28 @@ namespace AskFlow.Tests.Application.Posts.Handlers
         public async Task Handle_PostFromOtherUser_ShouldReturnForbidden()
         {
             var post = new PostBuilder().WithId(5).WithUserId("other-user").Build();
-            _repository.FindByIdAsync(5).Returns(post);
-            var sut = new DeletePostHandler(_repository, HttpContextFixture.CreateAuthenticated("user-1"), _logger);
+            _repository.FindByIdAsync(5, Arg.Any<CancellationToken>()).Returns(post);
+            var sut = new DeletePostHandler(_repository, _unitOfWork, HttpContextFixture.CreateAuthenticated("user-1"), _logger);
 
             var result = await sut.Handle(new DeletePostCommand(5), default);
 
             result.Type.Should().Be(ResultType.Forbidden);
             result.ErrorCode.Should().Be(ErrorCodes.PostNoPermissionToDelete);
-            await _repository.DidNotReceive().DeleteAsync(Arg.Any<Post>());
+            _repository.DidNotReceive().Delete(Arg.Any<Post>());
         }
 
         [Fact]
         public async Task Handle_Owner_ShouldDeletePost()
         {
             var post = new PostBuilder().WithId(7).WithUserId("user-1").Build();
-            _repository.FindByIdAsync(7).Returns(post);
-            var sut = new DeletePostHandler(_repository, HttpContextFixture.CreateAuthenticated("user-1"), _logger);
+            _repository.FindByIdAsync(7, Arg.Any<CancellationToken>()).Returns(post);
+            var sut = new DeletePostHandler(_repository, _unitOfWork, HttpContextFixture.CreateAuthenticated("user-1"), _logger);
 
             var result = await sut.Handle(new DeletePostCommand(7), default);
 
             result.Type.Should().Be(ResultType.Ok);
-            await _repository.Received(1).DeleteAsync(post);
+            _repository.Received(1).Delete(post);
+            await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
         }
     }
 }

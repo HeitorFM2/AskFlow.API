@@ -13,6 +13,7 @@ namespace AskFlow.Application.Auth.Handlers
         UserManager<User> userManager,
         ITokenService tokenService,
         IRefreshTokenRepository refreshTokenRepository,
+        IUnitOfWork unitOfWork,
         ILogger<RegisterHandler> logger) : IRequestHandler<RegisterCommand, Result<AuthViewModel>>
     {
         public async Task<Result<AuthViewModel>> Handle(RegisterCommand request, CancellationToken cancellationToken)
@@ -37,10 +38,12 @@ namespace AskFlow.Application.Auth.Handlers
             var accessToken = tokenService.GenerateAccessToken(user);
             var refreshToken = tokenService.GenerateRefreshToken();
 
-            await refreshTokenRepository.AddAsync(new RefreshToken(
+            refreshTokenRepository.Add(new RefreshToken(
                 refreshToken,
                 user,
                 DateTime.UtcNow.AddDays(tokenService.RefreshTokenExpiresInDays)));
+
+            await unitOfWork.SaveChangesAsync(cancellationToken);
 
             logger.LogInformation("User {UserId} registered successfully.", user.Id);
 

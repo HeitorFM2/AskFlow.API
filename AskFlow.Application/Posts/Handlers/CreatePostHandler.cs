@@ -9,6 +9,7 @@ namespace AskFlow.Application.Posts.Handlers
 {
     public class CreatePostHandler(
         IPostRepository repository,
+        IUnitOfWork unitOfWork,
         ICurrentUserService currentUserService,
         ILogger<CreatePostHandler> logger) : IRequestHandler<CreatePostCommand, Result<int>>
     {
@@ -20,7 +21,9 @@ namespace AskFlow.Application.Posts.Handlers
                 return Result<int>.Unauthorized(ErrorCodes.UserNotAuthenticated, "User not authenticated.");
 
             var post = new Post(command.Content, userId);
-            await repository.AddAsync(post);
+            repository.Add(post);
+
+            await unitOfWork.SaveChangesAsync(cancellationToken);
 
             logger.LogInformation("Post {PostId} created by user {UserId}.", post.Id, userId);
 

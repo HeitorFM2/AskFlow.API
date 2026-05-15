@@ -6,12 +6,12 @@ using MediatR;
 
 namespace AskFlow.Application.Comments.Handlers
 {
-    public class GetCommentsByPostHandler(ICommentRepository repository) : IRequestHandler<GetCommentsByPostQuery, Result<PagedResult<CommentViewModel>>>
+    public class GetCommentsByPostHandler(ICommentQueries queries) : IRequestHandler<GetCommentsByPostQuery, Result<PagedResult<CommentViewModel>>>
     {
         public async Task<Result<PagedResult<CommentViewModel>>> Handle(GetCommentsByPostQuery request, CancellationToken cancellationToken)
         {
-            var totalCount = await repository.CountByPostAsync(request.PostId, cancellationToken);
-            var comments = await repository.GetByPostAsync(request.PostId, request.Page, request.PageSize, cancellationToken);
+            var totalCount = await queries.CountByPostAsync(request.PostId, cancellationToken);
+            var comments = await queries.GetByPostAsync(request.PostId, request.Page, request.PageSize, cancellationToken);
 
             return Result<PagedResult<CommentViewModel>>.Success(new PagedResult<CommentViewModel>
             {

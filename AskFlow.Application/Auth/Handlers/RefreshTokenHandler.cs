@@ -10,11 +10,12 @@ namespace AskFlow.Application.Auth.Handlers
     public class RefreshTokenHandler(
         IRefreshTokenRepository refreshTokenRepository,
         ITokenService tokenService,
+        IUnitOfWork unitOfWork,
         ILogger<RefreshTokenHandler> logger) : IRequestHandler<RefreshTokenCommand, Result<AuthViewModel>>
     {
         public async Task<Result<AuthViewModel>> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
         {
-            var refreshToken = await refreshTokenRepository.GetByTokenAsync(request.RefreshToken);
+            var refreshToken = await refreshTokenRepository.GetByTokenAsync(request.RefreshToken, cancellationToken);
 
             if (refreshToken is null)
                 return Result<AuthViewModel>.Unauthorized(ErrorCodes.AuthRefreshTokenInvalid, "Invalid refresh token.");
@@ -22,7 +23,8 @@ namespace AskFlow.Application.Auth.Handlers
             if (refreshToken.IsRevoked)
             {
                 logger.LogWarning("Refresh token reuse detected for user {UserId}. Revoking all active tokens.", refreshToken.UserId);
-                await refreshTokenRepository.RevokeAllByUserIdAsync(refreshToken.UserId);
+                await refreshTokenRepository.RevokeAllByUserIdAsync(refreshToken.UserId, cancellationToken);
+                await unitOfWork.SaveChangesAsync(cancellationToken);
                 return Result<AuthViewModel>.Unauthorized(ErrorCodes.AuthRefreshTokenReuseDetected, "Refresh token reuse detected.");
             }
 
@@ -37,10 +39,12 @@ namespace AskFlow.Application.Auth.Handlers
             var newAccessToken = tokenService.GenerateAccessToken(refreshToken.User);
             var newRefreshToken = tokenService.GenerateRefreshToken();
 
-            await refreshTokenRepository.AddAsync(new Domain.Entities.RefreshToken(
+            refreshTokenRepository.Add(new Domain.Entities.RefreshToken(
                 newRefreshToken,
                 refreshToken.User,
                 DateTime.UtcNow.AddDays(tokenService.RefreshTokenExpiresInDays)));
+
+            await unitOfWork.SaveChangesAsync(cancellationToken);
 
             return Result<AuthViewModel>.Success(new AuthViewModel
             {
