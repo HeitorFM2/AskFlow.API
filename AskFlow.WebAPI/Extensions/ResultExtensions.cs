@@ -12,8 +12,10 @@ namespace AskFlow.WebAPI.Extensions
                 ResultType.Ok => controller.Ok(result.Value),
                 ResultType.NotFound => controller.NotFound(BuildErrorBody(result)),
                 ResultType.Unauthorized => controller.Unauthorized(BuildErrorBody(result)),
+                ResultType.Forbidden => controller.StatusCode(StatusCodes.Status403Forbidden, BuildErrorBody(result)),
                 ResultType.Invalid => controller.BadRequest(BuildErrorBody(result)),
-                _ => controller.StatusCode(500, BuildErrorBody(result))
+                ResultType.Conflict => controller.Conflict(BuildErrorBody(result)),
+                _ => controller.StatusCode(StatusCodes.Status500InternalServerError, BuildErrorBody(result))
             };
         }
 
@@ -24,8 +26,10 @@ namespace AskFlow.WebAPI.Extensions
                 ResultType.Ok => controller.NoContent(),
                 ResultType.NotFound => controller.NotFound(BuildErrorBody(result)),
                 ResultType.Unauthorized => controller.Unauthorized(BuildErrorBody(result)),
+                ResultType.Forbidden => controller.StatusCode(StatusCodes.Status403Forbidden, BuildErrorBody(result)),
                 ResultType.Invalid => controller.BadRequest(BuildErrorBody(result)),
-                _ => controller.StatusCode(500, BuildErrorBody(result))
+                ResultType.Conflict => controller.Conflict(BuildErrorBody(result)),
+                _ => controller.StatusCode(StatusCodes.Status500InternalServerError, BuildErrorBody(result))
             };
         }
 

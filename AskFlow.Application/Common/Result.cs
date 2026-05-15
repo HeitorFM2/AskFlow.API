@@ -18,7 +18,9 @@ namespace AskFlow.Application.Common
         public static Result Success() => new(true, null, null, ResultType.Ok);
         public static Result NotFound(string code, string error) => new(false, code, error, ResultType.NotFound);
         public static Result Unauthorized(string code, string error) => new(false, code, error, ResultType.Unauthorized);
+        public static Result Forbidden(string code, string error) => new(false, code, error, ResultType.Forbidden);
         public static Result Invalid(string code, string error) => new(false, code, error, ResultType.Invalid);
+        public static Result Conflict(string code, string error) => new(false, code, error, ResultType.Conflict);
         public static Result Failure(string code, string error) => new(false, code, error, ResultType.Failure);
     }
 
@@ -32,7 +34,9 @@ namespace AskFlow.Application.Common
         public static Result<T> Success(T value) => new(value);
         public new static Result<T> NotFound(string code, string error) => new(code, error, ResultType.NotFound);
         public new static Result<T> Unauthorized(string code, string error) => new(code, error, ResultType.Unauthorized);
+        public new static Result<T> Forbidden(string code, string error) => new(code, error, ResultType.Forbidden);
         public new static Result<T> Invalid(string code, string error) => new(code, error, ResultType.Invalid);
+        public new static Result<T> Conflict(string code, string error) => new(code, error, ResultType.Conflict);
         public new static Result<T> Failure(string code, string error) => new(code, error, ResultType.Failure);
     }
 }

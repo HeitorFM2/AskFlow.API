@@ -39,7 +39,7 @@ namespace AskFlow.Tests.Application.Posts.Handlers
         }
 
         [Fact]
-        public async Task Handle_PostFromOtherUser_ShouldReturnUnauthorized()
+        public async Task Handle_PostFromOtherUser_ShouldReturnForbidden()
         {
             var post = new PostBuilder().WithId(5).WithUserId("other-user").Build();
             _repository.FindByIdAsync(5).Returns(post);
@@ -47,7 +47,7 @@ namespace AskFlow.Tests.Application.Posts.Handlers
 
             var result = await sut.Handle(new DeletePostCommand(5), default);
 
-            result.Type.Should().Be(ResultType.Unauthorized);
+            result.Type.Should().Be(ResultType.Forbidden);
             result.ErrorCode.Should().Be(ErrorCodes.PostNoPermissionToDelete);
             await _repository.DidNotReceive().DeleteAsync(Arg.Any<Post>());
         }

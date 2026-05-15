@@ -4,10 +4,15 @@ on:
   pull_request:
     branches:
       - develop
+  push:
+    branches:
+      - main
+      - develop
 
 jobs:
   validate-branch:
     name: Validate branch name
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Check naming convention
@@ -26,6 +31,7 @@ jobs:
   build-and-test:
     name: Build, Test & Coverage Gate
     needs: validate-branch
+    if: ${{ always() && (needs.validate-branch.result == 'success' || needs.validate-branch.result == 'skipped') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout PR branch
@@ -33,7 +39,8 @@ jobs:
         with:
           path: pr
 
-      - name: Checkout develop (base)
+      - name: Checkout base branch
+        if: github.event_name == 'pull_request'
         uses: actions/checkout@v4
         with:
           ref: ${{ github.base_ref }}
@@ -63,6 +70,7 @@ jobs:
 
       - name: Parse PR coverage
         id: pr
+        if: github.event_name == 'pull_request'
         working-directory: pr
         run: |
           FILE=$(find TestResults -name "coverage.cobertura.xml" | head -1)
@@ -81,12 +89,14 @@ jobs:
       # ── Base branch ──────────────────────────────────────────────────
 
       - name: Restore & build (base)
+        if: github.event_name == 'pull_request'
         working-directory: base
         run: |
           dotnet restore
           dotnet build --no-restore --configuration Release
 
       - name: Test with coverage (base)
+        if: github.event_name == 'pull_request'
         working-directory: base
         run: |
           dotnet test AskFlow.Tests/AskFlow.Tests.csproj \
@@ -97,6 +107,7 @@ jobs:
 
       - name: Parse base coverage
         id: base
+        if: github.event_name == 'pull_request'
         working-directory: base
         run: |
           FILE=$(find TestResults -name "coverage.cobertura.xml" | head -1)
@@ -116,6 +127,7 @@ jobs:
       # ── Coverage gate ─────────────────────────────────────────────────
 
       - name: Coverage gate
+        if: github.event_name == 'pull_request'
         env:
           PR_PCT: ${{ steps.pr.outputs.pct }}
           BASE_PCT: ${{ steps.base.outputs.pct }}
@@ -124,7 +136,7 @@ jobs:
           import os, sys
           pr   = float(os.environ['PR_PCT'])
           base = float(os.environ['BASE_PCT'])
-          print(f"develop : {base}%")
+          print(f"base    : {base}%")
           print(f"this PR : {pr}%")
           if pr < base:
               print(f"::error::Coverage dropped {base}% → {pr}%. PRs must maintain or improve coverage.")

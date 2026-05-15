@@ -34,12 +34,16 @@ namespace AskFlow.Infrastructure
                 configuration.GetSection("BlobStorage"));
 
             services.AddScoped<ICurrentUserService, CurrentUserService>();
+            services.AddScoped<IPasswordSignInService, IdentityPasswordSignInService>();
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IAvatarStorage, AzureBlobAvatarStorage>();
+            services.AddSingleton<IImageProcessor, ImageSharpAvatarProcessor>();
             services.AddScoped<IPostRepository, PostRepository>();
             services.AddScoped<ICommentRepository, CommentRepository>();
             services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
             services.AddScoped<ILikeRepository, LikeRepository>();
+
+            services.AddHostedService<RefreshTokenCleanupService>();
 
             return services;
         }

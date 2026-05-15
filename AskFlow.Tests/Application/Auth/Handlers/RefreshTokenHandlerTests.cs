@@ -28,7 +28,7 @@ namespace AskFlow.Tests.Application.Auth.Handlers
         }
 
         [Fact]
-        public async Task Handle_TokenInactive_ShouldReturnUnauthorized()
+        public async Task Handle_TokenExpired_ShouldReturnUnauthorized()
         {
             var token = new RefreshTokenBuilder().WithExpiresAt(DateTime.UtcNow.AddDays(-1)).Build();
             _refreshTokens.GetByTokenAsync(Arg.Any<string>()).Returns(token);
@@ -37,6 +37,25 @@ namespace AskFlow.Tests.Application.Auth.Handlers
 
             result.Type.Should().Be(ResultType.Unauthorized);
             result.ErrorCode.Should().Be(ErrorCodes.AuthRefreshTokenExpiredOrRevoked);
+        }
+
+        [Fact]
+        public async Task Handle_RevokedToken_ShouldDetectReuse_AndRevokeAllForUser()
+        {
+            var user = new UserBuilder().Build();
+            var token = new RefreshTokenBuilder()
+                .WithUser(user)
+                .WithExpiresAt(DateTime.UtcNow.AddDays(2))
+                .Revoked()
+                .Build();
+            _refreshTokens.GetByTokenAsync(Arg.Any<string>()).Returns(token);
+
+            var result = await CreateSut().Handle(new RefreshTokenCommand("x"), default);
+
+            result.Type.Should().Be(ResultType.Unauthorized);
+            result.ErrorCode.Should().Be(ErrorCodes.AuthRefreshTokenReuseDetected);
+            await _refreshTokens.Received(1).RevokeAllByUserIdAsync(user.Id);
+            await _refreshTokens.DidNotReceive().AddAsync(Arg.Any<RefreshToken>());
         }
 
         [Fact]

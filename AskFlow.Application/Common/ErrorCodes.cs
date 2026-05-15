@@ -6,9 +6,14 @@ namespace AskFlow.Application.Common
         public const string InternalServerError = "INTERNAL_SERVER_ERROR";
         public const string UserNotAuthenticated = "USER_NOT_AUTHENTICATED";
 
+        public const string PaginationPageInvalid = "PAGINATION_PAGE_INVALID";
+        public const string PaginationPageSizeInvalid = "PAGINATION_PAGE_SIZE_INVALID";
+
         public const string AuthInvalidCredentials = "AUTH_INVALID_CREDENTIALS";
+        public const string AuthAccountLocked = "AUTH_ACCOUNT_LOCKED";
         public const string AuthRefreshTokenInvalid = "AUTH_REFRESH_TOKEN_INVALID";
         public const string AuthRefreshTokenExpiredOrRevoked = "AUTH_REFRESH_TOKEN_EXPIRED_OR_REVOKED";
+        public const string AuthRefreshTokenReuseDetected = "AUTH_REFRESH_TOKEN_REUSE_DETECTED";
         public const string AuthIdentityFailure = "AUTH_IDENTITY_FAILURE";
 
         public const string PostNotFound = "POST_NOT_FOUND";
@@ -22,6 +27,9 @@ namespace AskFlow.Application.Common
         public const string EmailInvalid = "EMAIL_INVALID";
         public const string PasswordRequired = "PASSWORD_REQUIRED";
         public const string PasswordMinLength = "PASSWORD_MIN_LENGTH";
+        public const string PasswordRequiresUppercase = "PASSWORD_REQUIRES_UPPERCASE";
+        public const string PasswordRequiresLowercase = "PASSWORD_REQUIRES_LOWERCASE";
+        public const string PasswordRequiresDigit = "PASSWORD_REQUIRES_DIGIT";
         public const string IdentificationRequired = "IDENTIFICATION_REQUIRED";
         public const string IdentificationMaxLength = "IDENTIFICATION_MAX_LENGTH";
         public const string RefreshTokenRequired = "REFRESH_TOKEN_REQUIRED";
@@ -37,6 +45,7 @@ namespace AskFlow.Application.Common
         public const string AvatarRequired = "AVATAR_REQUIRED";
         public const string AvatarContentTypeInvalid = "AVATAR_CONTENT_TYPE_INVALID";
         public const string AvatarTooLarge = "AVATAR_TOO_LARGE";
+        public const string AvatarInvalidContent = "AVATAR_INVALID_CONTENT";
         public const string AvatarUploadFailed = "AVATAR_UPLOAD_FAILED";
     }
 }
