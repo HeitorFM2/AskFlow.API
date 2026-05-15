@@ -6,6 +6,9 @@ namespace AskFlow.Application.Common
         public const string InternalServerError = "INTERNAL_SERVER_ERROR";
         public const string UserNotAuthenticated = "USER_NOT_AUTHENTICATED";
 
+        public const string PaginationPageInvalid = "PAGINATION_PAGE_INVALID";
+        public const string PaginationPageSizeInvalid = "PAGINATION_PAGE_SIZE_INVALID";
+
         public const string AuthInvalidCredentials = "AUTH_INVALID_CREDENTIALS";
         public const string AuthAccountLocked = "AUTH_ACCOUNT_LOCKED";
         public const string AuthRefreshTokenInvalid = "AUTH_REFRESH_TOKEN_INVALID";
