@@ -9,7 +9,7 @@ namespace AskFlow.Tests.Infrastructure.Repositories
     public class RefreshTokenRepositoryTests
     {
         [Fact]
-        public async Task AddAsync_AndGetByTokenAsync_ShouldRoundtrip()
+        public async Task Add_AndGetByTokenAsync_ShouldRoundtrip()
         {
             using var fx = new DatabaseFixture();
             var ctx = fx.Context;
@@ -19,7 +19,8 @@ namespace AskFlow.Tests.Infrastructure.Repositories
 
             var repo = new RefreshTokenRepository(ctx);
             var rt = new RefreshToken("abc", user, DateTime.UtcNow.AddDays(1));
-            await repo.AddAsync(rt);
+            repo.Add(rt);
+            await ctx.SaveChangesAsync();
 
             var fetched = await repo.GetByTokenAsync("abc");
             fetched.Should().NotBeNull();
@@ -47,14 +48,13 @@ namespace AskFlow.Tests.Infrastructure.Repositories
             await ctx.SaveChangesAsync();
 
             var repo = new RefreshTokenRepository(ctx);
-            var t1 = new RefreshToken("a", u1, DateTime.UtcNow.AddDays(1));
-            var t2 = new RefreshToken("b", u1, DateTime.UtcNow.AddDays(1));
-            var t3 = new RefreshToken("c", u2, DateTime.UtcNow.AddDays(1));
-            await repo.AddAsync(t1);
-            await repo.AddAsync(t2);
-            await repo.AddAsync(t3);
+            repo.Add(new RefreshToken("a", u1, DateTime.UtcNow.AddDays(1)));
+            repo.Add(new RefreshToken("b", u1, DateTime.UtcNow.AddDays(1)));
+            repo.Add(new RefreshToken("c", u2, DateTime.UtcNow.AddDays(1)));
+            await ctx.SaveChangesAsync();
 
             await repo.RevokeAllByUserIdAsync(u1.Id);
+            await ctx.SaveChangesAsync();
 
             var hashA = RefreshToken.HashToken("a");
             var hashB = RefreshToken.HashToken("b");

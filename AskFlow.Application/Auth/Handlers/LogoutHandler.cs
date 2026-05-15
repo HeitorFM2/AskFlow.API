@@ -5,11 +5,14 @@ using MediatR;
 
 namespace AskFlow.Application.Auth.Handlers
 {
-    public class LogoutHandler(IRefreshTokenRepository refreshTokenRepository) : IRequestHandler<LogoutCommand, Result>
+    public class LogoutHandler(
+        IRefreshTokenRepository refreshTokenRepository,
+        IUnitOfWork unitOfWork) : IRequestHandler<LogoutCommand, Result>
     {
         public async Task<Result> Handle(LogoutCommand request, CancellationToken cancellationToken)
         {
-            await refreshTokenRepository.RevokeAllByUserIdAsync(request.UserId);
+            await refreshTokenRepository.RevokeAllByUserIdAsync(request.UserId, cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
             return Result.Success();
         }
     }

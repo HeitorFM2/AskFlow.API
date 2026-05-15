@@ -12,54 +12,58 @@ namespace AskFlow.Tests.Application.Likes.Handlers
     {
         private readonly ILikeRepository _likes = Substitute.For<ILikeRepository>();
         private readonly IPostRepository _posts = Substitute.For<IPostRepository>();
+        private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
 
         [Fact]
         public async Task Handle_Unauthenticated_ShouldReturnUnauthorized()
         {
-            var sut = new ToggleLikeHandler(_likes, _posts, HttpContextFixture.CreateUnauthenticated());
+            var sut = new ToggleLikeHandler(_likes, _posts, _unitOfWork, HttpContextFixture.CreateUnauthenticated());
 
             var result = await sut.Handle(new ToggleLikeCommand(1), default);
 
             result.Type.Should().Be(ResultType.Unauthorized);
             result.ErrorCode.Should().Be(ErrorCodes.UserNotAuthenticated);
-            await _likes.DidNotReceive().ToggleLikeAsync(Arg.Any<string>(), Arg.Any<int>(), Arg.Any<CancellationToken>());
+            await _likes.DidNotReceive().ToggleAsync(Arg.Any<Post>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
         }
 
         [Fact]
         public async Task Handle_PostNotFound_ShouldReturnNotFound()
         {
-            _posts.FindByIdAsync(5).Returns((Post?)null);
-            var sut = new ToggleLikeHandler(_likes, _posts, HttpContextFixture.CreateAuthenticated("u1"));
+            _posts.FindByIdAsync(5, Arg.Any<CancellationToken>()).Returns((Post?)null);
+            var sut = new ToggleLikeHandler(_likes, _posts, _unitOfWork, HttpContextFixture.CreateAuthenticated("u1"));
 
             var result = await sut.Handle(new ToggleLikeCommand(5), default);
 
             result.Type.Should().Be(ResultType.NotFound);
             result.ErrorCode.Should().Be(ErrorCodes.PostNotFound);
-            await _likes.DidNotReceive().ToggleLikeAsync(Arg.Any<string>(), Arg.Any<int>(), Arg.Any<CancellationToken>());
+            await _likes.DidNotReceive().ToggleAsync(Arg.Any<Post>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
         }
 
         [Fact]
         public async Task Handle_Authenticated_ShouldCallToggle_AndReturnTrue_WhenLiked()
         {
             const string userId = "u1";
-            _posts.FindByIdAsync(5).Returns(new PostBuilder().WithId(5).Build());
-            _likes.ToggleLikeAsync(userId, 5, Arg.Any<CancellationToken>()).Returns(true);
-            var sut = new ToggleLikeHandler(_likes, _posts, HttpContextFixture.CreateAuthenticated(userId));
+            var post = new PostBuilder().WithId(5).Build();
+            _posts.FindByIdAsync(5, Arg.Any<CancellationToken>()).Returns(post);
+            _likes.ToggleAsync(post, userId, Arg.Any<CancellationToken>()).Returns(true);
+            var sut = new ToggleLikeHandler(_likes, _posts, _unitOfWork, HttpContextFixture.CreateAuthenticated(userId));
 
             var result = await sut.Handle(new ToggleLikeCommand(5), default);
 
             result.IsSuccess.Should().BeTrue();
             result.Value.Should().BeTrue();
-            await _likes.Received(1).ToggleLikeAsync(userId, 5, Arg.Any<CancellationToken>());
+            await _likes.Received(1).ToggleAsync(post, userId, Arg.Any<CancellationToken>());
+            await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
         }
 
         [Fact]
         public async Task Handle_Authenticated_ShouldCallToggle_AndReturnFalse_WhenUnliked()
         {
             const string userId = "u1";
-            _posts.FindByIdAsync(5).Returns(new PostBuilder().WithId(5).Build());
-            _likes.ToggleLikeAsync(userId, 5, Arg.Any<CancellationToken>()).Returns(false);
-            var sut = new ToggleLikeHandler(_likes, _posts, HttpContextFixture.CreateAuthenticated(userId));
+            var post = new PostBuilder().WithId(5).Build();
+            _posts.FindByIdAsync(5, Arg.Any<CancellationToken>()).Returns(post);
+            _likes.ToggleAsync(post, userId, Arg.Any<CancellationToken>()).Returns(false);
+            var sut = new ToggleLikeHandler(_likes, _posts, _unitOfWork, HttpContextFixture.CreateAuthenticated(userId));
 
             var result = await sut.Handle(new ToggleLikeCommand(5), default);
 

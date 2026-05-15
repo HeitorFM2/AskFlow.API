@@ -9,8 +9,8 @@ namespace AskFlow.Tests.Application.Posts.Handlers
 {
     public class GetAllPostsHandlerTests
     {
-        private readonly IPostRepository _postRepo = Substitute.For<IPostRepository>();
-        private readonly ILikeRepository _likeRepo = Substitute.For<ILikeRepository>();
+        private readonly IPostQueries _postQueries = Substitute.For<IPostQueries>();
+        private readonly ILikeQueries _likeQueries = Substitute.For<ILikeQueries>();
 
         [Fact]
         public async Task Handle_ShouldReturn_PostsViewModel_WithCounts()
@@ -25,11 +25,11 @@ namespace AskFlow.Tests.Application.Posts.Handlers
                 User = new UserDto { UserName = "user", Identification = "user_a" }
             };
 
-            _postRepo.CountAsync(Arg.Any<CancellationToken>()).Returns(1);
-            _postRepo.GetAllAsync(1, 20, Arg.Any<CancellationToken>())
+            _postQueries.CountAsync(Arg.Any<CancellationToken>()).Returns(1);
+            _postQueries.GetAllAsync(1, 20, Arg.Any<CancellationToken>())
                 .Returns(new List<PostsViewModel> { item });
 
-            var sut = new GetAllPostsHandler(_postRepo, _likeRepo, HttpContextFixture.CreateUnauthenticated());
+            var sut = new GetAllPostsHandler(_postQueries, _likeQueries, HttpContextFixture.CreateUnauthenticated());
 
             var result = await sut.Handle(new GetAllPostsQuery(1, 20), default);
 
@@ -54,12 +54,12 @@ namespace AskFlow.Tests.Application.Posts.Handlers
                 new() { Id = 2, User = new UserDto() }
             };
 
-            _postRepo.CountAsync(Arg.Any<CancellationToken>()).Returns(2);
-            _postRepo.GetAllAsync(1, 20, Arg.Any<CancellationToken>()).Returns(items);
-            _likeRepo.GetLikedPostIdsAsync("u1", Arg.Any<IEnumerable<int>>(), Arg.Any<CancellationToken>())
+            _postQueries.CountAsync(Arg.Any<CancellationToken>()).Returns(2);
+            _postQueries.GetAllAsync(1, 20, Arg.Any<CancellationToken>()).Returns(items);
+            _likeQueries.GetLikedPostIdsAsync("u1", Arg.Any<IEnumerable<int>>(), Arg.Any<CancellationToken>())
                 .Returns([2]);
 
-            var sut = new GetAllPostsHandler(_postRepo, _likeRepo, HttpContextFixture.CreateAuthenticated("u1"));
+            var sut = new GetAllPostsHandler(_postQueries, _likeQueries, HttpContextFixture.CreateAuthenticated("u1"));
 
             var result = await sut.Handle(new GetAllPostsQuery(1, 20), default);
 

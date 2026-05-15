@@ -9,31 +9,25 @@ namespace AskFlow.Infrastructure.Repositories
     {
         private readonly AppDbContext _context = context;
 
-        public async Task<RefreshToken?> GetByTokenAsync(string token)
+        public Task<RefreshToken?> GetByTokenAsync(string token, CancellationToken cancellationToken = default)
         {
             var hash = RefreshToken.HashToken(token);
 
-            return await _context.RefreshTokens
+            return _context.RefreshTokens
                 .Include(r => r.User)
-                .FirstOrDefaultAsync(r => r.TokenHash == hash);
+                .FirstOrDefaultAsync(r => r.TokenHash == hash, cancellationToken);
         }
 
-        public async Task AddAsync(RefreshToken refreshToken)
-        {
-            _context.RefreshTokens.Add(refreshToken);
-            await _context.SaveChangesAsync();
-        }
+        public void Add(RefreshToken refreshToken) => _context.RefreshTokens.Add(refreshToken);
 
-        public async Task RevokeAllByUserIdAsync(string userId)
+        public async Task RevokeAllByUserIdAsync(string userId, CancellationToken cancellationToken = default)
         {
             var tokens = await _context.RefreshTokens
                 .Where(r => r.UserId == userId && !r.IsRevoked)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
             foreach (var token in tokens)
                 token.Revoke();
-
-            await _context.SaveChangesAsync();
         }
     }
 }
