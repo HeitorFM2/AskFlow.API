@@ -184,5 +184,188 @@ namespace AskFlow.Tests.Infrastructure.Repositories
 
             (await queries.CountAsync()).Should().Be(0);
         }
+
+        [Fact]
+        public async Task GetByUserAsync_ShouldReturn_Empty_WhenUserHasNoPosts()
+        {
+            using var fx = new DatabaseFixture();
+            var queries = new PostQueries(fx.Context);
+
+            var result = await queries.GetByUserAsync("user-1", 1, 10);
+
+            result.Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task GetByUserAsync_ShouldReturn_OnlyPostsOfSpecifiedUser()
+        {
+            using var fx = new DatabaseFixture();
+            var ctx = fx.Context;
+            var user = new UserBuilder().Build();
+            var otherUser = new UserBuilder().Build();
+            ctx.Users.AddRange(user, otherUser);
+            var myPost = new PostBuilder().WithId(0).WithUserId(user.Id).Build();
+            var theirPost = new PostBuilder().WithId(0).WithUserId(otherUser.Id).Build();
+            ctx.Posts.AddRange(myPost, theirPost);
+            await ctx.SaveChangesAsync();
+
+            var queries = new PostQueries(ctx);
+            var result = await queries.GetByUserAsync(user.Id, 1, 10);
+
+            result.Should().ContainSingle();
+            result[0].Id.Should().Be(myPost.Id);
+        }
+
+        [Fact]
+        public async Task GetByUserAsync_ShouldNotReturn_DeletedPosts()
+        {
+            using var fx = new DatabaseFixture();
+            var ctx = fx.Context;
+            var user = new UserBuilder().Build();
+            ctx.Users.Add(user);
+            var activePost = new PostBuilder().WithId(0).WithUserId(user.Id).Build();
+            var deletedPost = new PostBuilder().WithId(0).WithUserId(user.Id).Build();
+            ctx.Posts.AddRange(activePost, deletedPost);
+            await ctx.SaveChangesAsync();
+            deletedPost.MarkAsDeleted();
+            await ctx.SaveChangesAsync();
+
+            var queries = new PostQueries(ctx);
+            var result = await queries.GetByUserAsync(user.Id, 1, 10);
+
+            result.Should().ContainSingle();
+            result[0].Id.Should().Be(activePost.Id);
+        }
+
+        [Fact]
+        public async Task GetByUserAsync_ShouldOrder_ByCreatedAtDescending()
+        {
+            using var fx = new DatabaseFixture();
+            var ctx = fx.Context;
+            var user = new UserBuilder().Build();
+            ctx.Users.Add(user);
+            await ctx.SaveChangesAsync();
+
+            var p1 = new PostBuilder().WithId(0).WithUserId(user.Id).Build();
+            ctx.Posts.Add(p1);
+            await ctx.SaveChangesAsync();
+            await Task.Delay(10);
+            var p2 = new PostBuilder().WithId(0).WithUserId(user.Id).Build();
+            ctx.Posts.Add(p2);
+            await ctx.SaveChangesAsync();
+
+            var queries = new PostQueries(ctx);
+            var result = await queries.GetByUserAsync(user.Id, 1, 10);
+
+            result.Select(p => p.Id).Should().Equal(p2.Id, p1.Id);
+        }
+
+        [Fact]
+        public async Task GetByUserAsync_ShouldRespect_Pagination()
+        {
+            using var fx = new DatabaseFixture();
+            var ctx = fx.Context;
+            var user = new UserBuilder().Build();
+            ctx.Users.Add(user);
+            await ctx.SaveChangesAsync();
+
+            for (int i = 0; i < 5; i++)
+            {
+                ctx.Posts.Add(new PostBuilder().WithId(0).WithUserId(user.Id).Build());
+                await ctx.SaveChangesAsync();
+            }
+
+            var queries = new PostQueries(ctx);
+            var firstPage = await queries.GetByUserAsync(user.Id, 1, 3);
+            var secondPage = await queries.GetByUserAsync(user.Id, 2, 3);
+
+            firstPage.Should().HaveCount(3);
+            secondPage.Should().HaveCount(2);
+            firstPage.Select(p => p.Id).Should().NotIntersectWith(secondPage.Select(p => p.Id));
+        }
+
+        [Fact]
+        public async Task GetByUserAsync_ShouldProject_AllFields_Correctly()
+        {
+            using var fx = new DatabaseFixture();
+            var ctx = fx.Context;
+            var user = new UserBuilder().Build();
+            ctx.Users.Add(user);
+            var post = new PostBuilder().WithId(0).WithUserId(user.Id).Build();
+            post.IncrementCommentCount();
+            post.IncrementLikeCount();
+            ctx.Posts.Add(post);
+            await ctx.SaveChangesAsync();
+
+            var queries = new PostQueries(ctx);
+            var result = await queries.GetByUserAsync(user.Id, 1, 10);
+
+            result.Should().ContainSingle();
+            var vm = result[0];
+            vm.Id.Should().Be(post.Id);
+            vm.Content.Should().Be(post.Content);
+            vm.Comments.Should().Be(1);
+            vm.Likes.Should().Be(1);
+            vm.User.UserName.Should().Be(user.UserName);
+            vm.User.Identification.Should().Be(user.Identification);
+        }
+
+        [Fact]
+        public async Task CountByUserAsync_ShouldReturn_Zero_WhenUserHasNoPosts()
+        {
+            using var fx = new DatabaseFixture();
+            var queries = new PostQueries(fx.Context);
+
+            (await queries.CountByUserAsync("user-1")).Should().Be(0);
+        }
+
+        [Fact]
+        public async Task CountByUserAsync_ShouldReturn_CorrectCount()
+        {
+            using var fx = new DatabaseFixture();
+            var ctx = fx.Context;
+            var user = new UserBuilder().Build();
+            ctx.Users.Add(user);
+            ctx.Posts.AddRange(
+                new PostBuilder().WithId(0).WithUserId(user.Id).Build(),
+                new PostBuilder().WithId(0).WithUserId(user.Id).Build());
+            await ctx.SaveChangesAsync();
+
+            var queries = new PostQueries(ctx);
+            (await queries.CountByUserAsync(user.Id)).Should().Be(2);
+        }
+
+        [Fact]
+        public async Task CountByUserAsync_ShouldNotCount_OtherUsersPosts()
+        {
+            using var fx = new DatabaseFixture();
+            var ctx = fx.Context;
+            var user = new UserBuilder().Build();
+            var otherUser = new UserBuilder().Build();
+            ctx.Users.AddRange(user, otherUser);
+            ctx.Posts.Add(new PostBuilder().WithId(0).WithUserId(otherUser.Id).Build());
+            await ctx.SaveChangesAsync();
+
+            var queries = new PostQueries(ctx);
+            (await queries.CountByUserAsync(user.Id)).Should().Be(0);
+        }
+
+        [Fact]
+        public async Task CountByUserAsync_ShouldNotCount_DeletedPosts()
+        {
+            using var fx = new DatabaseFixture();
+            var ctx = fx.Context;
+            var user = new UserBuilder().Build();
+            ctx.Users.Add(user);
+            var activePost = new PostBuilder().WithId(0).WithUserId(user.Id).Build();
+            var deletedPost = new PostBuilder().WithId(0).WithUserId(user.Id).Build();
+            ctx.Posts.AddRange(activePost, deletedPost);
+            await ctx.SaveChangesAsync();
+            deletedPost.MarkAsDeleted();
+            await ctx.SaveChangesAsync();
+
+            var queries = new PostQueries(ctx);
+            (await queries.CountByUserAsync(user.Id)).Should().Be(1);
+        }
     }
 }

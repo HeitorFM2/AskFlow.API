@@ -109,5 +109,40 @@ namespace AskFlow.Tests.WebAPI.Controllers
 
             await act.Should().ThrowAsync<ValidationException>();
         }
+
+        [Fact]
+        public async Task GetMyPosts_ShouldReturnOk()
+        {
+            _mediator.Send(Arg.Any<GetMyPostsQuery>(), Arg.Any<CancellationToken>())
+                .Returns(Result<PagedResult<PostsViewModel>>.Success(new PagedResult<PostsViewModel>()));
+
+            var action = await CreateSut().GetMyPosts();
+
+            action.Should().BeOfType<OkObjectResult>();
+        }
+
+        [Fact]
+        public async Task GetMyPosts_Unauthenticated_ShouldReturnUnauthorized()
+        {
+            _mediator.Send(Arg.Any<GetMyPostsQuery>(), Arg.Any<CancellationToken>())
+                .Returns(Result<PagedResult<PostsViewModel>>.Unauthorized(ErrorCodes.UserNotAuthenticated, "User not authenticated."));
+
+            var action = await CreateSut().GetMyPosts();
+
+            action.Should().BeOfType<UnauthorizedObjectResult>();
+        }
+
+        [Fact]
+        public async Task GetMyPosts_ShouldPassPageParams_ToMediator()
+        {
+            _mediator.Send(Arg.Any<GetMyPostsQuery>(), Arg.Any<CancellationToken>())
+                .Returns(Result<PagedResult<PostsViewModel>>.Success(new PagedResult<PostsViewModel>()));
+
+            await CreateSut().GetMyPosts(page: 3, pageSize: 5);
+
+            await _mediator.Received(1).Send(
+                Arg.Is<GetMyPostsQuery>(q => q.Page == 3 && q.PageSize == 5),
+                Arg.Any<CancellationToken>());
+        }
     }
 }
