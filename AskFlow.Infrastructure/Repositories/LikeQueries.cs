@@ -15,21 +15,22 @@ namespace AskFlow.Infrastructure.Repositories
             int pageSize,
             CancellationToken cancellationToken = default)
         {
-            return await _context.Likes
+            return await _context.Posts
                 .AsNoTracking()
-                .Where(l => l.UserId == userId)
-                .OrderByDescending(l => l.Post.CreatedAt)
+                .Where(p => p.Likes.Any(l => l.UserId == userId))
+                .OrderByDescending(p => p.CreatedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(l => new LikedPostDto
+                .Select(p => new LikedPostDto
                 {
-                    PostId = l.Post.Id,
-                    Content = l.Post.Content,
-                    CreatedAt = l.Post.CreatedAt,
-                    CommentsCount = l.Post.CommentCount,
-                    LikesCount = l.Post.LikeCount,
-                    AuthorUserName = l.Post.User.UserName ?? string.Empty,
-                    AuthorIdentification = l.Post.User.Identification
+                    PostId = p.Id,
+                    Content = p.Content,
+                    CreatedAt = p.CreatedAt,
+                    CommentsCount = p.CommentCount,
+                    LikesCount = p.LikeCount,
+                    AuthorUserName = p.User.UserName ?? string.Empty,
+                    AuthorIdentification = p.User.Identification,
+                    AuthorAvatarUrl = p.User.AvatarUrl
                 })
                 .ToListAsync(cancellationToken);
         }
@@ -38,7 +39,7 @@ namespace AskFlow.Infrastructure.Repositories
             string userId,
             CancellationToken cancellationToken = default)
         {
-            return _context.Likes.CountAsync(c => c.UserId == userId, cancellationToken);
+            return _context.Posts.CountAsync(p => p.Likes.Any(l => l.UserId == userId), cancellationToken);
         }
 
         public async Task<HashSet<int>> GetLikedPostIdsAsync(
