@@ -39,7 +39,7 @@ namespace AskFlow.WebAPI.Controllers
         [HttpPost("Logout")]
         public async Task<IActionResult> Logout()
         {
-            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var userId = User.FindFirst("sub")?.Value;
 
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();

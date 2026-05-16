@@ -27,7 +27,7 @@ namespace AskFlow.Tests.Application.Auth.Handlers
                     new IdentityError { Description = "Email already taken" },
                     new IdentityError { Description = "Weak password" }));
 
-            var result = await CreateSut().Handle(new RegisterCommand("a@b.com", "1", "id"), default);
+            var result = await CreateSut().Handle(new RegisterCommand("a@b.com", "username", "1", "id"), default);
 
             result.Type.Should().Be(ResultType.Invalid);
             result.ErrorCode.Should().Be(ErrorCodes.AuthIdentityFailure);
@@ -44,7 +44,7 @@ namespace AskFlow.Tests.Application.Auth.Handlers
             var expiry = DateTime.UtcNow.AddMinutes(20);
             _tokenService.GetAccessTokenExpiry().Returns(expiry);
 
-            var result = await CreateSut().Handle(new RegisterCommand("a@b.com", "pwd", "id"), default);
+            var result = await CreateSut().Handle(new RegisterCommand("a@b.com", "username", "pwd", "id"), default);
 
             result.IsSuccess.Should().BeTrue();
             result.Value!.AccessToken.Should().Be("acc");

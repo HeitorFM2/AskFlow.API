@@ -11,7 +11,9 @@
     public class UserAuthViewModel
     {
         public string Id { get; set; } = string.Empty;
+        public string? UserName { get; set; }
         public string Email { get; set; } = string.Empty;
         public string Identification { get; set; } = string.Empty;
+        public string? AvatarUrl {  get; set; }
     }
 }

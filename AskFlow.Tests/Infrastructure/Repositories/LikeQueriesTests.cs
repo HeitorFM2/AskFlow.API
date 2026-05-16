@@ -233,5 +233,76 @@ namespace AskFlow.Tests.Infrastructure.Repositories
 
             result.Should().BeEmpty();
         }
+
+        [Fact]
+        public async Task GetLikePostsAsync_ShouldNotReturn_LikesForDeletedPosts()
+        {
+            using var fx = new DatabaseFixture();
+            var (ctx, user, post) = await SeedAsync(fx);
+
+            ctx.Likes.Add(new Like(post.Id, user.Id) { User = user, Post = post });
+            post.MarkAsDeleted();
+            await ctx.SaveChangesAsync();
+
+            var queries = new LikeQueries(ctx);
+            var result = await queries.GetLikePostsAsync(user.Id, 1, 10);
+
+            result.Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task GetLikePostsAsync_ShouldReturn_ActivePosts_WhenMixedWithDeleted()
+        {
+            using var fx = new DatabaseFixture();
+            var (ctx, user, activePost) = await SeedAsync(fx);
+
+            var deletedPost = new PostBuilder().WithId(0).WithUserId(user.Id).Build();
+            ctx.Posts.Add(deletedPost);
+            await ctx.SaveChangesAsync();
+
+            ctx.Likes.Add(new Like(activePost.Id, user.Id) { User = user, Post = activePost });
+            ctx.Likes.Add(new Like(deletedPost.Id, user.Id) { User = user, Post = deletedPost });
+            deletedPost.MarkAsDeleted();
+            await ctx.SaveChangesAsync();
+
+            var queries = new LikeQueries(ctx);
+            var result = await queries.GetLikePostsAsync(user.Id, 1, 10);
+
+            result.Should().ContainSingle();
+            result[0].PostId.Should().Be(activePost.Id);
+        }
+
+        [Fact]
+        public async Task CountLikedPostAsync_ShouldNotCount_LikesForDeletedPosts()
+        {
+            using var fx = new DatabaseFixture();
+            var (ctx, user, post) = await SeedAsync(fx);
+
+            ctx.Likes.Add(new Like(post.Id, user.Id) { User = user, Post = post });
+            post.MarkAsDeleted();
+            await ctx.SaveChangesAsync();
+
+            var queries = new LikeQueries(ctx);
+            (await queries.CountLikedPostAsync(user.Id)).Should().Be(0);
+        }
+
+        [Fact]
+        public async Task CountLikedPostAsync_ShouldCount_OnlyActivePosts_WhenMixedWithDeleted()
+        {
+            using var fx = new DatabaseFixture();
+            var (ctx, user, activePost) = await SeedAsync(fx);
+
+            var deletedPost = new PostBuilder().WithId(0).WithUserId(user.Id).Build();
+            ctx.Posts.Add(deletedPost);
+            await ctx.SaveChangesAsync();
+
+            ctx.Likes.Add(new Like(activePost.Id, user.Id) { User = user, Post = activePost });
+            ctx.Likes.Add(new Like(deletedPost.Id, user.Id) { User = user, Post = deletedPost });
+            deletedPost.MarkAsDeleted();
+            await ctx.SaveChangesAsync();
+
+            var queries = new LikeQueries(ctx);
+            (await queries.CountLikedPostAsync(user.Id)).Should().Be(1);
+        }
     }
 }

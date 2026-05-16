@@ -43,6 +43,40 @@ namespace AskFlow.Infrastructure.Repositories
             return _context.Posts.CountAsync(cancellationToken);
         }
 
+        public async Task<IReadOnlyList<PostsViewModel>> GetByUserAsync(
+            string userId,
+            int page,
+            int pageSize,
+            CancellationToken cancellationToken = default)
+        {
+            return await _context.Posts
+                .AsNoTracking()
+                .Where(p => p.UserId == userId)
+                .OrderByDescending(p => p.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(p => new PostsViewModel
+                {
+                    Id = p.Id,
+                    Content = p.Content,
+                    CreatedAt = p.CreatedAt,
+                    Comments = p.CommentCount,
+                    Likes = p.LikeCount,
+                    User = new UserDto
+                    {
+                        UserName = p.User.UserName ?? "",
+                        Identification = p.User.Identification,
+                        AvatarUrl = p.User.AvatarUrl
+                    }
+                })
+                .ToListAsync(cancellationToken);
+        }
+
+        public Task<int> CountByUserAsync(string userId, CancellationToken cancellationToken = default)
+        {
+            return _context.Posts.CountAsync(p => p.UserId == userId, cancellationToken);
+        }
+
         public Task<PostViewModel?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
             return _context.Posts

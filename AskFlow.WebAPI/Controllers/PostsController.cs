@@ -21,6 +21,13 @@ namespace AskFlow.WebAPI.Controllers
             return result.ToActionResult(this);
         }
 
+        [HttpGet("Me")]
+        public async Task<IActionResult> GetMyPosts([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+        {
+            var result = await _mediator.Send(new GetMyPostsQuery(page, pageSize));
+            return result.ToActionResult(this);
+        }
+
         [HttpGet("{postId:int}/Details")]
         public async Task<IActionResult> GetById([FromRoute] int postId)
         {

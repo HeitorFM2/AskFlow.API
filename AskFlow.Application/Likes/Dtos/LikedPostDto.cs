@@ -9,5 +9,6 @@ namespace AskFlow.Application.Likes.Dtos
         public int LikesCount { get; set; }
         public string AuthorUserName { get; set; } = string.Empty;
         public string AuthorIdentification { get; set; } = string.Empty;
+        public string? AuthorAvatarUrl { get; set; }
     }
 }
