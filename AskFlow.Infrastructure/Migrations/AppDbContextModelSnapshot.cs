@@ -400,7 +400,7 @@ namespace AskFlow.Infrastructure.Migrations
                     b.HasOne("AskFlow.Domain.Entities.User", "User")
                         .WithMany("Comments")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.ClientCascade)
                         .IsRequired();
 
                     b.Navigation("ParentComment");
@@ -420,7 +420,7 @@ namespace AskFlow.Infrastructure.Migrations
                     b.HasOne("AskFlow.Domain.Entities.User", "User")
                         .WithMany("Likes")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.ClientCascade)
                         .IsRequired();
 
                     b.Navigation("Post");
