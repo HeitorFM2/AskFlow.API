@@ -33,7 +33,8 @@ namespace AskFlow.Application.Likes.Handlers
                 User = new UserDto
                 {
                     UserName = p.AuthorUserName,
-                    Identification = p.AuthorIdentification
+                    Identification = p.AuthorIdentification,
+                    AvatarUrl = p.AuthorAvatarUrl
                 }
             }).ToList();
 

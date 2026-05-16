@@ -21,7 +21,7 @@ namespace AskFlow.Application.Auth.Handlers
             var user = new User
             {
                 Email = request.Email,
-                UserName = request.Email,
+                UserName = request.UserName,
                 Identification = request.Identification,
                 CreatedAt = DateTime.UtcNow
             };

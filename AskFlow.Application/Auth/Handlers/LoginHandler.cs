@@ -63,8 +63,10 @@ namespace AskFlow.Application.Auth.Handlers
                 User = new UserAuthViewModel
                 {
                     Id = user.Id,
+                    UserName = user.UserName,
                     Email = user.Email!,
-                    Identification = user.Identification
+                    Identification = user.Identification,
+                    AvatarUrl = user.AvatarUrl
                 }
             });
         }
