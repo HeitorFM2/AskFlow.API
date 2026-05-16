@@ -39,7 +39,7 @@ namespace AskFlow.Tests.WebAPI.Controllers
             _mediator.Send(Arg.Any<RegisterCommand>(), Arg.Any<CancellationToken>())
                 .Returns(Result<AuthViewModel>.Success(SampleViewModel()));
 
-            var action = await CreateSut().Register(new RegisterCommand("a@b.com", "pwd", "id"));
+            var action = await CreateSut().Register(new RegisterCommand("a@b.com", "username", "pwd", "id"));
 
             action.Should().BeOfType<OkObjectResult>();
         }
@@ -50,7 +50,7 @@ namespace AskFlow.Tests.WebAPI.Controllers
             _mediator.Send(Arg.Any<RegisterCommand>(), Arg.Any<CancellationToken>())
                 .Returns<Task<Result<AuthViewModel>>>(_ => throw new ValidationException(new[] { new ValidationFailure("X", "obrig") }));
 
-            var act = async () => await CreateSut().Register(new RegisterCommand("", "", ""));
+            var act = async () => await CreateSut().Register(new RegisterCommand("", "", "", ""));
 
             await act.Should().ThrowAsync<ValidationException>();
         }
@@ -107,11 +107,11 @@ namespace AskFlow.Tests.WebAPI.Controllers
         }
 
         [Fact]
-        public async Task Logout_WithUserId_ShouldReturnNoContent()
+        public async Task Logout_WithSubClaim_ShouldReturnNoContent()
         {
             var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
             {
-                new Claim(ClaimTypes.NameIdentifier, "user-1")
+                new Claim("sub", "user-1")
             }, "TestAuth"));
 
             _mediator.Send(Arg.Any<LogoutCommand>(), Arg.Any<CancellationToken>())
@@ -121,6 +121,20 @@ namespace AskFlow.Tests.WebAPI.Controllers
 
             action.Should().BeOfType<NoContentResult>();
             await _mediator.Received(1).Send(Arg.Is<LogoutCommand>(c => c.UserId == "user-1"), Arg.Any<CancellationToken>());
+        }
+
+        [Fact]
+        public async Task Logout_WithNameIdentifierClaim_ShouldReturnUnauthorized()
+        {
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, "user-1")
+            }, "TestAuth"));
+
+            var action = await CreateSut(user).Logout();
+
+            action.Should().BeOfType<UnauthorizedResult>();
+            await _mediator.DidNotReceive().Send(Arg.Any<LogoutCommand>(), Arg.Any<CancellationToken>());
         }
     }
 }
