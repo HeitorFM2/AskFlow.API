@@ -5,7 +5,7 @@
 namespace AskFlow.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class AddPostCountersAndUserContentCascade : Migration
+    public partial class AddPostCountersAndActiveIndex : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -44,16 +44,14 @@ namespace AskFlow.Infrastructure.Migrations
                 table: "Comments",
                 column: "UserId",
                 principalTable: "AspNetUsers",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                principalColumn: "Id");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Likes_AspNetUsers_UserId",
                 table: "Likes",
                 column: "UserId",
                 principalTable: "AspNetUsers",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                principalColumn: "Id");
         }
 
         /// <inheritdoc />
