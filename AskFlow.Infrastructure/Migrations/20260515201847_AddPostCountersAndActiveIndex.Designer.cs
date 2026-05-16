@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AskFlow.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260515195032_AddPostCountersAndUserContentCascade")]
-    partial class AddPostCountersAndUserContentCascade
+    [Migration("20260515201847_AddPostCountersAndActiveIndex")]
+    partial class AddPostCountersAndActiveIndex
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -403,7 +403,7 @@ namespace AskFlow.Infrastructure.Migrations
                     b.HasOne("AskFlow.Domain.Entities.User", "User")
                         .WithMany("Comments")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.ClientCascade)
                         .IsRequired();
 
                     b.Navigation("ParentComment");
@@ -423,7 +423,7 @@ namespace AskFlow.Infrastructure.Migrations
                     b.HasOne("AskFlow.Domain.Entities.User", "User")
                         .WithMany("Likes")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.ClientCascade)
                         .IsRequired();
 
                     b.Navigation("Post");
