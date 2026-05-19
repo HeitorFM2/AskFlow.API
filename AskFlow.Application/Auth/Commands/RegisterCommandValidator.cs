@@ -18,9 +18,13 @@ namespace AskFlow.Application.Auth.Commands
                 .Matches("[a-z]").WithErrorCode(ErrorCodes.PasswordRequiresLowercase).WithMessage("Password must contain at least one lowercase letter.")
                 .Matches("[0-9]").WithErrorCode(ErrorCodes.PasswordRequiresDigit).WithMessage("Password must contain at least one digit.");
 
+            RuleFor(x => x.UserName)
+                .NotEmpty().WithErrorCode(ErrorCodes.UserNameRequired).WithMessage("UserName is required.")
+                .MaximumLength(50).WithErrorCode(ErrorCodes.UserNameMaxLength).WithMessage("UserName must be at most 50 characters.");
+
             RuleFor(x => x.Identification)
                 .NotEmpty().WithErrorCode(ErrorCodes.IdentificationRequired).WithMessage("Identification is required.")
-                .MaximumLength(50).WithErrorCode(ErrorCodes.IdentificationMaxLength).WithMessage("Identification must be at most 50 characters.");
+                .MaximumLength(100).WithErrorCode(ErrorCodes.IdentificationMaxLength).WithMessage("Identification must be at most 100 characters.");
         }
     }
 }
