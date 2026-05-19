@@ -8,7 +8,7 @@ REST API backend for the **AskFlow** platform — a social/Q&A application suppo
 
 `AskFlow.API` is a .NET 10 Web API organized as **Clean Architecture** (Domain → Application → Infrastructure → WebAPI) with **CQRS** powered by MediatR. Every client request is dispatched to a `Command` (write) or `Query` (read) handler through a validation pipeline (FluentValidation), and every operation returns a typed `Result<T>` that maps cleanly to HTTP status codes.
 
-Feature areas: **Auth** (register, login, refresh-token rotation with reuse detection, logout), **Posts** (CRUD + paginated listings, soft delete), **Comments** (threaded via `ParentCommentId`), **Likes** (toggle + liked-posts listing), **Users** (profile, avatar upload).
+Feature areas: **Auth** (register, login, refresh-token rotation with reuse detection, logout), **Posts** (CRUD + paginated listings, filter by username, soft delete), **Comments** (threaded via `ParentCommentId`), **Likes** (toggle + liked-posts listing), **Follows** (toggle follow, followers/following listings, stats), **Users** (list, profile, avatar upload).
 
 ---
 
@@ -79,6 +79,7 @@ AskFlow.API/
 │   ├── Posts/     { Commands, Queries, Handlers, ViewModels }
 │   ├── Comments/  { Commands, Queries, Handlers, ViewModels }
 │   ├── Likes/     { Commands, Queries, Handlers, Dtos }
+│   ├── Follows/   { Commands, Queries, Handlers, Dtos }
 │   └── Users/     { Commands, Queries, Handlers, Dtos }
 ├── AskFlow.Infrastructure/
 │   ├── DependencyInjection.cs
@@ -89,7 +90,7 @@ AskFlow.API/
 │   └── Migrations/
 ├── AskFlow.WebAPI/
 │   ├── Program.cs
-│   ├── Controllers/                    # Auth, Posts, Comments, Likes, Users
+│   ├── Controllers/                    # Auth, Posts, Comments, Likes, Follows, Users
 │   ├── Extensions/                     # GlobalExceptionHandler, ResultExtensions
 │   └── appsettings.example*.json
 └── AskFlow.Tests/                      # xUnit, 80% coverage gate
@@ -141,25 +142,63 @@ dotnet test AskFlow.Tests/AskFlow.Tests.csproj --settings AskFlow.Tests/coverlet
 
 All endpoints are versioned under `/api/v2`. All require JWT except where noted; auth endpoints are rate-limited (10 req/min/IP), global limit 200 req/min/IP.
 
+### Auth
+
 | Method | Route | Auth | Description |
 |---|---|---|---|
 | `POST` | `/api/v2/Auth/Register` | — | Create user, return tokens |
 | `POST` | `/api/v2/Auth/Login` | — | Authenticate, return tokens |
 | `POST` | `/api/v2/Auth/RefreshToken` | — | Rotate access + refresh token |
 | `POST` | `/api/v2/Auth/Logout` | JWT | Revoke all refresh tokens |
+
+### Posts
+
+| Method | Route | Auth | Description |
+|---|---|---|---|
 | `GET`  | `/api/v2/Posts` | JWT | Paginated global feed (with `isLiked`) |
+| `POST` | `/api/v2/Posts/ByUserName` | JWT | Paginated posts filtered by username |
 | `GET`  | `/api/v2/Posts/Me` | JWT | Posts by current user |
 | `GET`  | `/api/v2/Posts/{id}/Details` | JWT | Post detail + comments |
 | `POST` | `/api/v2/Posts` | JWT | Create post |
 | `DELETE` | `/api/v2/Posts/{id}` | JWT (owner) | Soft delete |
-| `GET`  | `/api/v2/Comments/{postId}` | JWT | Paginated comments |
-| `GET`  | `/api/v2/Comments/{id}/Replies` | JWT | Threaded replies |
+
+### Comments
+
+| Method | Route | Auth | Description |
+|---|---|---|---|
+| `GET`  | `/api/v2/Comments/{postId}` | JWT | Paginated comments for a post |
+| `GET`  | `/api/v2/Comments/{id}/Replies` | JWT | Threaded replies for a comment |
 | `POST` | `/api/v2/Comments/{postId}` | JWT | Create comment (supports `parentCommentId`) |
 | `DELETE` | `/api/v2/Comments/{id}` | JWT (owner) | Delete comment |
-| `POST` | `/api/v2/Likes/{postId}` | JWT | Toggle like |
-| `GET`  | `/api/v2/Likes/LikedPosts` | JWT | Posts liked by current user |
+
+### Likes
+
+| Method | Route | Auth | Description |
+|---|---|---|---|
+| `POST` | `/api/v2/Likes/{postId}` | JWT | Toggle like on a post |
+| `GET`  | `/api/v2/Likes/LikedPosts` | JWT | Posts liked by the current user |
+
+### Follows
+
+| Method | Route | Auth | Description |
+|---|---|---|---|
+| `POST` | `/api/v2/Follows` | JWT | Toggle follow/unfollow a user |
+| `GET`  | `/api/v2/Follows/Followers` | JWT | Paginated list of followers (supports `search`) |
+| `GET`  | `/api/v2/Follows/Following` | JWT | Paginated list of followed users (supports `search`) |
+| `GET`  | `/api/v2/Follows/Stats` | JWT | Follower and following counts for current user |
+
+### Users
+
+| Method | Route | Auth | Description |
+|---|---|---|---|
+| `GET`  | `/api/v2/Users` | JWT | List all users (supports `search`) |
 | `GET`  | `/api/v2/Users/Me` | JWT | Current user profile |
 | `PATCH` | `/api/v2/Users/Avatar` | JWT | Upload avatar (multipart, ≤3 MB) |
+
+### Health
+
+| Method | Route | Auth | Description |
+|---|---|---|---|
 | `GET`  | `/health` | — | Health check (app + DB) |
 
 ### Error format
