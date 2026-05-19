@@ -11,6 +11,7 @@ namespace AskFlow.Tests.Application.Posts.Handlers
     {
         private readonly IPostQueries _postQueries = Substitute.For<IPostQueries>();
         private readonly ILikeQueries _likeQueries = Substitute.For<ILikeQueries>();
+        private readonly IFollowQueries _followQueries = Substitute.For<IFollowQueries>();
 
         [Fact]
         public async Task Handle_ShouldReturn_PostsViewModel_WithCounts()
@@ -29,7 +30,7 @@ namespace AskFlow.Tests.Application.Posts.Handlers
             _postQueries.GetAllAsync(1, 20, Arg.Any<CancellationToken>())
                 .Returns(new List<PostsViewModel> { item });
 
-            var sut = new GetAllPostsHandler(_postQueries, _likeQueries, HttpContextFixture.CreateUnauthenticated());
+            var sut = new GetAllPostsHandler(_postQueries, _likeQueries, _followQueries, HttpContextFixture.CreateUnauthenticated());
 
             var result = await sut.Handle(new GetAllPostsQuery(1, 20), default);
 
@@ -58,13 +59,39 @@ namespace AskFlow.Tests.Application.Posts.Handlers
             _postQueries.GetAllAsync(1, 20, Arg.Any<CancellationToken>()).Returns(items);
             _likeQueries.GetLikedPostIdsAsync("u1", Arg.Any<IEnumerable<int>>(), Arg.Any<CancellationToken>())
                 .Returns([2]);
+            _followQueries.GetFollowedUserNamesAsync("u1", Arg.Any<IEnumerable<string>>(), Arg.Any<CancellationToken>())
+                .Returns(new HashSet<string>());
 
-            var sut = new GetAllPostsHandler(_postQueries, _likeQueries, HttpContextFixture.CreateAuthenticated("u1"));
+            var sut = new GetAllPostsHandler(_postQueries, _likeQueries, _followQueries, HttpContextFixture.CreateAuthenticated("u1"));
 
             var result = await sut.Handle(new GetAllPostsQuery(1, 20), default);
 
             result.Value!.Items.Single(p => p.Id == 1).IsLiked.Should().BeFalse();
             result.Value.Items.Single(p => p.Id == 2).IsLiked.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task Handle_Authenticated_ShouldFlag_IsFollowing_ForFollowedAuthors()
+        {
+            var items = new List<PostsViewModel>
+            {
+                new() { Id = 1, User = new UserDto { UserName = "alice" } },
+                new() { Id = 2, User = new UserDto { UserName = "bob" } }
+            };
+
+            _postQueries.CountAsync(Arg.Any<CancellationToken>()).Returns(2);
+            _postQueries.GetAllAsync(1, 20, Arg.Any<CancellationToken>()).Returns(items);
+            _likeQueries.GetLikedPostIdsAsync("u1", Arg.Any<IEnumerable<int>>(), Arg.Any<CancellationToken>())
+                .Returns(new HashSet<int>());
+            _followQueries.GetFollowedUserNamesAsync("u1", Arg.Any<IEnumerable<string>>(), Arg.Any<CancellationToken>())
+                .Returns(new HashSet<string> { "alice" });
+
+            var sut = new GetAllPostsHandler(_postQueries, _likeQueries, _followQueries, HttpContextFixture.CreateAuthenticated("u1"));
+
+            var result = await sut.Handle(new GetAllPostsQuery(1, 20), default);
+
+            result.Value!.Items.Single(p => p.Id == 1).User.IsFollowing.Should().BeTrue();
+            result.Value.Items.Single(p => p.Id == 2).User.IsFollowing.Should().BeFalse();
         }
     }
 }

@@ -29,7 +29,7 @@ namespace AskFlow.Tests.Application.Auth.Validators
         [Fact]
         public void Validate_IdentificationTooLong_ShouldFail()
         {
-            var longIdent = new string('a', 51);
+            var longIdent = new string('a', 101);
 
             var result = _sut.Validate(new RegisterCommand("user@askflow.com", "username", "Senha123", longIdent));
 

@@ -46,6 +46,9 @@ namespace AskFlow.Infrastructure
             services.AddScoped<ICommentQueries, CommentQueries>();
             services.AddScoped<ILikeRepository, LikeRepository>();
             services.AddScoped<ILikeQueries, LikeQueries>();
+            services.AddScoped<IFollowRepository, FollowRepository>();
+            services.AddScoped<IFollowQueries, FollowQueries>();
+            services.AddScoped<IUserQueries, UserQueries>();
             services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
             services.AddHostedService<RefreshTokenCleanupService>();

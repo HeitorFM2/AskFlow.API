@@ -1,6 +1,6 @@
-﻿namespace AskFlow.Application.Users.ViewModels
+namespace AskFlow.Application.Follows.ViewModels
 {
-    public class UserDto
+    public class FollowViewModel
     {
         public string UserName { get; set; } = string.Empty;
         public string Identification { get; set; } = string.Empty;

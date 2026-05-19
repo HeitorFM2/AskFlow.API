@@ -30,6 +30,8 @@ namespace AskFlow.Application.Common
         public const string PasswordRequiresUppercase = "PASSWORD_REQUIRES_UPPERCASE";
         public const string PasswordRequiresLowercase = "PASSWORD_REQUIRES_LOWERCASE";
         public const string PasswordRequiresDigit = "PASSWORD_REQUIRES_DIGIT";
+        public const string UserNameRequired = "USERNAME_REQUIRED";
+        public const string UserNameMaxLength = "USERNAME_MAX_LENGTH";
         public const string IdentificationRequired = "IDENTIFICATION_REQUIRED";
         public const string IdentificationMaxLength = "IDENTIFICATION_MAX_LENGTH";
         public const string RefreshTokenRequired = "REFRESH_TOKEN_REQUIRED";
@@ -42,6 +44,8 @@ namespace AskFlow.Application.Common
         public const string CommentContentMaxLength = "COMMENT_CONTENT_MAX_LENGTH";
 
         public const string UserNotFound = "USER_NOT_FOUND";
+
+        public const string FollowCannotFollowSelf = "FOLLOW_CANNOT_FOLLOW_SELF";
         public const string AvatarRequired = "AVATAR_REQUIRED";
         public const string AvatarContentTypeInvalid = "AVATAR_CONTENT_TYPE_INVALID";
         public const string AvatarTooLarge = "AVATAR_TOO_LARGE";
