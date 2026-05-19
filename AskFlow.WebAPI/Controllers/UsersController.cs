@@ -15,6 +15,13 @@ namespace AskFlow.WebAPI.Controllers
     {
         private readonly IMediator _mediator = mediator;
 
+        [HttpGet]
+        public async Task<IActionResult> GetAll([FromQuery] string? search = null)
+        {
+            var result = await _mediator.Send(new GetAllUsersQuery(search));
+            return result.ToActionResult(this);
+        }
+
         [HttpGet("Me")]
         public async Task<IActionResult> GetMe()
         {
