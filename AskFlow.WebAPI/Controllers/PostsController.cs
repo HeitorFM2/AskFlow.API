@@ -21,6 +21,16 @@ namespace AskFlow.WebAPI.Controllers
             return result.ToActionResult(this);
         }
 
+        [HttpPost("ByUserName")]
+        public async Task<IActionResult> GetByUserName(
+            [FromBody] GetPostsByUserNameQuery query,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 20)
+        {
+            var result = await _mediator.Send(query with { Page = page, PageSize = pageSize });
+            return result.ToActionResult(this);
+        }
+
         [HttpGet("Me")]
         public async Task<IActionResult> GetMyPosts([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
