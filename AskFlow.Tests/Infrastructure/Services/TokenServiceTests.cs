@@ -75,6 +75,33 @@ namespace AskFlow.Tests.Infrastructure.Services
         }
 
         [Fact]
+        public void GenerateAccessToken_ShouldProduceUniqueJti_OnEachCall()
+        {
+            var user = new UserBuilder().Build();
+            var sut = CreateSut();
+
+            var jwt1 = new JwtSecurityTokenHandler().ReadJwtToken(sut.GenerateAccessToken(user));
+            var jwt2 = new JwtSecurityTokenHandler().ReadJwtToken(sut.GenerateAccessToken(user));
+
+            var jti1 = jwt1.Claims.Single(c => c.Type == JwtRegisteredClaimNames.Jti).Value;
+            var jti2 = jwt2.Claims.Single(c => c.Type == JwtRegisteredClaimNames.Jti).Value;
+
+            jti1.Should().NotBe(jti2);
+        }
+
+        [Fact]
+        public void GenerateAccessToken_WhenEmailIsNull_ShouldUseEmptyStringForEmailClaim()
+        {
+            var user = new UserBuilder().Build();
+            user.Email = null;
+
+            var token = CreateSut().GenerateAccessToken(user);
+
+            var jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
+            jwt.Claims.Should().Contain(c => c.Type == JwtRegisteredClaimNames.Email && c.Value == string.Empty);
+        }
+
+        [Fact]
         public void GenerateRefreshToken_ShouldProduce_NonEmptyUniqueValues()
         {
             var sut = CreateSut();

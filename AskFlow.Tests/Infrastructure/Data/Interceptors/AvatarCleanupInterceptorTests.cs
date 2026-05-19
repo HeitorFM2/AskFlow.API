@@ -3,6 +3,7 @@ using AskFlow.Infrastructure.Data;
 using AskFlow.Infrastructure.Data.Interceptors;
 using AskFlow.Tests.Common.Builders;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
 
 namespace AskFlow.Tests.Infrastructure.Data.Interceptors
@@ -85,6 +86,34 @@ namespace AskFlow.Tests.Infrastructure.Data.Interceptors
             _logger.ReceivedCalls()
                 .Any(c => c.GetMethodInfo().Name == "Log" && c.GetArguments()[0]?.ToString() == "Error")
                 .Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task SavingChangesAsync_WhenContextIsNull_ShouldNotDeleteAvatar()
+        {
+            var interceptor = new AvatarCleanupInterceptor(_avatarStorage, _logger);
+            var eventData = new DbContextEventData(null!, null!, (DbContext?)null);
+            var completedData = new SaveChangesCompletedEventData(null!, null!, null!, 0);
+
+            await interceptor.SavingChangesAsync(eventData, default);
+            await interceptor.SavedChangesAsync(completedData, 0, default);
+
+            await _avatarStorage.DidNotReceive().DeleteAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
+        }
+
+        [Fact]
+        public async Task SavingChangesAsync_WhenUserIsModified_ShouldNotDeleteAvatar()
+        {
+            await using var context = CreateContext();
+            var user = new UserBuilder().WithId("u1").Build();
+            context.Users.Add(user);
+            await context.SaveChangesAsync();
+
+            user.Identification = "updated_identification";
+            context.Users.Update(user);
+            await context.SaveChangesAsync();
+
+            await _avatarStorage.DidNotReceive().DeleteAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
         }
     }
 }
