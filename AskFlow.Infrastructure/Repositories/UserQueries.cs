@@ -22,7 +22,8 @@ namespace AskFlow.Infrastructure.Repositories
                 {
                     UserName = u.UserName ?? string.Empty,
                     Identification = u.Identification,
-                    AvatarUrl = u.AvatarUrl
+                    AvatarUrl = u.AvatarUrl,
+                    IsFollowing = _context.Follows.Any(f => f.FollowerId == excludeUserId && f.FollowedId == u.Id)
                 })
                 .ToListAsync(cancellationToken);
         }
