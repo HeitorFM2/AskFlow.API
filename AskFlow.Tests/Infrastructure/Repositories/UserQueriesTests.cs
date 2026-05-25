@@ -140,5 +140,53 @@ namespace AskFlow.Tests.Infrastructure.Repositories
 
             result.Should().BeEmpty();
         }
+
+        // --- IsIdentificationTakenAsync ---
+
+        [Fact]
+        public async Task IsIdentificationTakenAsync_ShouldReturnFalse_WhenNoOtherUserHasThatIdentification()
+        {
+            using var fx = new DatabaseFixture();
+            var ctx = fx.Context;
+            var user = new UserBuilder().WithIdentification("unique_id").Build();
+            ctx.Users.Add(user);
+            await ctx.SaveChangesAsync();
+            var queries = new UserQueries(ctx);
+
+            var result = await queries.IsIdentificationTakenAsync("unique_id", user.Id);
+
+            result.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task IsIdentificationTakenAsync_ShouldReturnTrue_WhenAnotherUserHasThatIdentification()
+        {
+            using var fx = new DatabaseFixture();
+            var ctx = fx.Context;
+            var existing = new UserBuilder().WithIdentification("taken_id").Build();
+            var other = new UserBuilder().Build();
+            ctx.Users.AddRange(existing, other);
+            await ctx.SaveChangesAsync();
+            var queries = new UserQueries(ctx);
+
+            var result = await queries.IsIdentificationTakenAsync("taken_id", other.Id);
+
+            result.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task IsIdentificationTakenAsync_ShouldReturnFalse_WhenIdentificationDoesNotExist()
+        {
+            using var fx = new DatabaseFixture();
+            var ctx = fx.Context;
+            var user = new UserBuilder().Build();
+            ctx.Users.Add(user);
+            await ctx.SaveChangesAsync();
+            var queries = new UserQueries(ctx);
+
+            var result = await queries.IsIdentificationTakenAsync("nonexistent_id", user.Id);
+
+            result.Should().BeFalse();
+        }
     }
 }

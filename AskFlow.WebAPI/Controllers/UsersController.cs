@@ -29,6 +29,13 @@ namespace AskFlow.WebAPI.Controllers
             return result.ToActionResult(this);
         }
 
+        [HttpPut]
+        public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileCommand command)
+        {
+            var result = await _mediator.Send(command);
+            return result.ToActionResult(this);
+        }
+
         [HttpPatch("Avatar")]
         [RequestSizeLimit(3 * 1024 * 1024)]
         [RequestFormLimits(MultipartBodyLengthLimit = 3 * 1024 * 1024)]
