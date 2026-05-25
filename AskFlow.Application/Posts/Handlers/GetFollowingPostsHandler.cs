@@ -6,19 +6,24 @@ using MediatR;
 
 namespace AskFlow.Application.Posts.Handlers
 {
-    public class GetAllPostsHandler(
+    public class GetFollowingPostsHandler(
         IPostQueries postQueries,
         ILikeQueries likeQueries,
         ICurrentUserService currentUserService)
-        : IRequestHandler<GetAllPostsQuery, Result<PagedResult<PostsViewModel>>>
+        : IRequestHandler<GetFollowingPostsQuery, Result<PagedResult<PostsViewModel>>>
     {
-        public async Task<Result<PagedResult<PostsViewModel>>> Handle(GetAllPostsQuery request, CancellationToken cancellationToken)
+        public async Task<Result<PagedResult<PostsViewModel>>> Handle(GetFollowingPostsQuery request, CancellationToken cancellationToken)
         {
-            var totalCount = await postQueries.CountAsync(cancellationToken);
-            var posts = await postQueries.GetAllAsync(request.Page, request.PageSize, cancellationToken);
-
             var userId = currentUserService.GetUserId();
-            if (!string.IsNullOrEmpty(userId) && posts.Count > 0)
+
+            if (string.IsNullOrEmpty(userId))
+                return Result<PagedResult<PostsViewModel>>.Unauthorized(
+                    ErrorCodes.UserNotAuthenticated, "User not authenticated.");
+
+            var totalCount = await postQueries.CountFollowingPostsAsync(userId, cancellationToken);
+            var posts = await postQueries.GetFollowingPostsAsync(userId, request.Page, request.PageSize, cancellationToken);
+
+            if (posts.Count > 0)
             {
                 var likedIds = await likeQueries.GetLikedPostIdsAsync(userId, posts.Select(p => p.Id), cancellationToken);
 

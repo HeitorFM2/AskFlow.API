@@ -12,7 +12,6 @@ namespace AskFlow.Tests.Common.Builders
         private int? _postId;
         private int? _parentCommentId;
         private User? _user;
-        private List<Comment> _replies = new();
 
         public CommentBuilder()
         {
@@ -25,12 +24,6 @@ namespace AskFlow.Tests.Common.Builders
         public CommentBuilder WithId(int id)
         {
             _id = id;
-            return this;
-        }
-
-        public CommentBuilder WithContent(string content)
-        {
-            _content = content;
             return this;
         }
 
@@ -59,12 +52,6 @@ namespace AskFlow.Tests.Common.Builders
             return this;
         }
 
-        public CommentBuilder WithReplies(params Comment[] replies)
-        {
-            _replies = replies.ToList();
-            return this;
-        }
-
         public Comment Build()
         {
             var comment = new Comment(_content, _userId, _postId, _parentCommentId)
@@ -73,8 +60,6 @@ namespace AskFlow.Tests.Common.Builders
             };
             if (_user is not null)
                 comment.User = _user;
-            foreach (var r in _replies)
-                comment.Replies.Add(r);
             return comment;
         }
     }

@@ -43,6 +43,13 @@ namespace AskFlow.WebAPI.Controllers
             return result.ToActionResult(this);
         }
 
+        [HttpGet("IsFollowing/{userName}")]
+        public async Task<IActionResult> GetIsFollowing([FromRoute] string userName)
+        {
+            var result = await _mediator.Send(new GetIsFollowingQuery(userName));
+            return result.ToActionResult(this);
+        }
+
         [HttpGet("Stats")]
         public async Task<IActionResult> GetStats()
         {

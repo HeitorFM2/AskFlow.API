@@ -15,11 +15,10 @@ namespace AskFlow.Tests.Application.Posts.Handlers
     {
         private readonly IPostQueries _postQueries = Substitute.For<IPostQueries>();
         private readonly ILikeQueries _likeQueries = Substitute.For<ILikeQueries>();
-        private readonly IFollowQueries _followQueries = Substitute.For<IFollowQueries>();
         private readonly UserManager<User> _userManager = UserManagerFixture.Create();
 
         private GetPostsByUserNameHandler CreateSut(string? userId) =>
-            new(_postQueries, _likeQueries, _followQueries,
+            new(_postQueries, _likeQueries,
                 userId is null
                     ? HttpContextFixture.CreateUnauthenticated()
                     : HttpContextFixture.CreateAuthenticated(userId),
@@ -48,7 +47,7 @@ namespace AskFlow.Tests.Application.Posts.Handlers
         }
 
         [Fact]
-        public async Task Handle_EmptyPosts_ShouldReturnEmptyPagedResult_AndSkipLikeAndFollowQueries()
+        public async Task Handle_EmptyPosts_ShouldReturnEmptyPagedResult_AndSkipLikeQuery()
         {
             var target = new UserBuilder().Build();
             _userManager.FindByNameAsync(target.UserName!).Returns(target);
@@ -63,8 +62,6 @@ namespace AskFlow.Tests.Application.Posts.Handlers
             result.Value.TotalCount.Should().Be(0);
             await _likeQueries.DidNotReceive().GetLikedPostIdsAsync(
                 Arg.Any<string>(), Arg.Any<IEnumerable<int>>(), Arg.Any<CancellationToken>());
-            await _followQueries.DidNotReceive().GetFollowedUserNamesAsync(
-                Arg.Any<string>(), Arg.Any<IEnumerable<string>>(), Arg.Any<CancellationToken>());
         }
 
         [Fact]
@@ -82,58 +79,11 @@ namespace AskFlow.Tests.Application.Posts.Handlers
             _postQueries.GetByUserAsync(target.Id, 1, 20, Arg.Any<CancellationToken>()).Returns(posts);
             _likeQueries.GetLikedPostIdsAsync(userId, Arg.Any<IEnumerable<int>>(), Arg.Any<CancellationToken>())
                 .Returns(new HashSet<int> { 2 });
-            _followQueries.GetFollowedUserNamesAsync(userId, Arg.Any<IEnumerable<string>>(), Arg.Any<CancellationToken>())
-                .Returns(new HashSet<string>());
 
             var result = await CreateSut(userId).Handle(new GetPostsByUserNameQuery(target.UserName!, 1, 20), default);
 
             result.Value!.Items.Single(p => p.Id == 1).IsLiked.Should().BeFalse();
             result.Value.Items.Single(p => p.Id == 2).IsLiked.Should().BeTrue();
-        }
-
-        [Fact]
-        public async Task Handle_Authenticated_ShouldSetIsFollowing_True_WhenFollowingAuthor()
-        {
-            const string userId = "u1";
-            var target = new UserBuilder().Build();
-            var posts = new List<PostsViewModel>
-            {
-                new() { Id = 1, User = new UserDto { UserName = target.UserName! } },
-                new() { Id = 2, User = new UserDto { UserName = target.UserName! } }
-            };
-            _userManager.FindByNameAsync(target.UserName!).Returns(target);
-            _postQueries.CountByUserAsync(target.Id, Arg.Any<CancellationToken>()).Returns(2);
-            _postQueries.GetByUserAsync(target.Id, 1, 20, Arg.Any<CancellationToken>()).Returns(posts);
-            _likeQueries.GetLikedPostIdsAsync(userId, Arg.Any<IEnumerable<int>>(), Arg.Any<CancellationToken>())
-                .Returns(new HashSet<int>());
-            _followQueries.GetFollowedUserNamesAsync(userId, Arg.Any<IEnumerable<string>>(), Arg.Any<CancellationToken>())
-                .Returns(new HashSet<string> { target.UserName! });
-
-            var result = await CreateSut(userId).Handle(new GetPostsByUserNameQuery(target.UserName!, 1, 20), default);
-
-            result.Value!.Items.Should().AllSatisfy(p => p.User.IsFollowing.Should().BeTrue());
-        }
-
-        [Fact]
-        public async Task Handle_Authenticated_ShouldSetIsFollowing_False_WhenNotFollowingAuthor()
-        {
-            const string userId = "u1";
-            var target = new UserBuilder().Build();
-            var posts = new List<PostsViewModel>
-            {
-                new() { Id = 1, User = new UserDto { UserName = target.UserName! } }
-            };
-            _userManager.FindByNameAsync(target.UserName!).Returns(target);
-            _postQueries.CountByUserAsync(target.Id, Arg.Any<CancellationToken>()).Returns(1);
-            _postQueries.GetByUserAsync(target.Id, 1, 20, Arg.Any<CancellationToken>()).Returns(posts);
-            _likeQueries.GetLikedPostIdsAsync(userId, Arg.Any<IEnumerable<int>>(), Arg.Any<CancellationToken>())
-                .Returns(new HashSet<int>());
-            _followQueries.GetFollowedUserNamesAsync(userId, Arg.Any<IEnumerable<string>>(), Arg.Any<CancellationToken>())
-                .Returns(new HashSet<string>());
-
-            var result = await CreateSut(userId).Handle(new GetPostsByUserNameQuery(target.UserName!, 1, 20), default);
-
-            result.Value!.Items.Single().User.IsFollowing.Should().BeFalse();
         }
 
         [Fact]

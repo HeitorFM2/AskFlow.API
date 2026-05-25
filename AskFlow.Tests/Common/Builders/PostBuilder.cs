@@ -26,12 +26,6 @@ namespace AskFlow.Tests.Common.Builders
             return this;
         }
 
-        public PostBuilder WithContent(string content)
-        {
-            _content = content;
-            return this;
-        }
-
         public PostBuilder WithUserId(string userId)
         {
             _userId = userId;

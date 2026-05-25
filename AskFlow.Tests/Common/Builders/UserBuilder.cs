@@ -42,12 +42,6 @@ namespace AskFlow.Tests.Common.Builders
             return this;
         }
 
-        public UserBuilder WithCreatedAt(DateTime createdAt)
-        {
-            _createdAt = createdAt;
-            return this;
-        }
-
         public UserBuilder WithAvatarUrl(string? avatarUrl)
         {
             _avatarUrl = avatarUrl;

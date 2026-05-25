@@ -9,5 +9,7 @@ namespace AskFlow.Application.Interfaces
         Task<PostViewModel?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
         Task<IReadOnlyList<PostsViewModel>> GetByUserAsync(string userId, int page, int pageSize, CancellationToken cancellationToken = default);
         Task<int> CountByUserAsync(string userId, CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<PostsViewModel>> GetFollowingPostsAsync(string userId, int page, int pageSize, CancellationToken cancellationToken = default);
+        Task<int> CountFollowingPostsAsync(string userId, CancellationToken cancellationToken = default);
     }
 }
