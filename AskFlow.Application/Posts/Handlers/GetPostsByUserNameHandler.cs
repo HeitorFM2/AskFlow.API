@@ -11,7 +11,6 @@ namespace AskFlow.Application.Posts.Handlers
     public class GetPostsByUserNameHandler(
         IPostQueries postQueries,
         ILikeQueries likeQueries,
-        IFollowQueries followQueries,
         ICurrentUserService currentUserService,
         UserManager<User> userManager)
         : IRequestHandler<GetPostsByUserNameQuery, Result<PagedResult<PostsViewModel>>>
@@ -34,13 +33,9 @@ namespace AskFlow.Application.Posts.Handlers
             if (posts.Count > 0)
             {
                 var likedIds = await likeQueries.GetLikedPostIdsAsync(userId, posts.Select(p => p.Id), cancellationToken);
-                var followedNames = await followQueries.GetFollowedUserNamesAsync(userId, [request.TargetUserName], cancellationToken);
 
                 foreach (var post in posts)
-                {
                     post.IsLiked = likedIds.Contains(post.Id);
-                    post.User.IsFollowing = followedNames.Contains(request.TargetUserName);
-                }
             }
 
             return Result<PagedResult<PostsViewModel>>.Success(new PagedResult<PostsViewModel>

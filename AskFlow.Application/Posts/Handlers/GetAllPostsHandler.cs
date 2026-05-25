@@ -9,7 +9,6 @@ namespace AskFlow.Application.Posts.Handlers
     public class GetAllPostsHandler(
         IPostQueries postQueries,
         ILikeQueries likeQueries,
-        IFollowQueries followQueries,
         ICurrentUserService currentUserService)
         : IRequestHandler<GetAllPostsQuery, Result<PagedResult<PostsViewModel>>>
     {
@@ -21,16 +20,10 @@ namespace AskFlow.Application.Posts.Handlers
             var userId = currentUserService.GetUserId();
             if (!string.IsNullOrEmpty(userId) && posts.Count > 0)
             {
-                var authorNames = posts.Select(p => p.User.UserName);
-
                 var likedIds = await likeQueries.GetLikedPostIdsAsync(userId, posts.Select(p => p.Id), cancellationToken);
-                var followedNames = await followQueries.GetFollowedUserNamesAsync(userId, authorNames, cancellationToken);
 
                 foreach (var post in posts)
-                {
                     post.IsLiked = likedIds.Contains(post.Id);
-                    post.User.IsFollowing = followedNames.Contains(post.User.UserName);
-                }
             }
 
             return Result<PagedResult<PostsViewModel>>.Success(new PagedResult<PostsViewModel>
