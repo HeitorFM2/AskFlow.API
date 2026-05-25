@@ -367,5 +367,86 @@ namespace AskFlow.Tests.Infrastructure.Repositories
             var queries = new PostQueries(ctx);
             (await queries.CountByUserAsync(user.Id)).Should().Be(1);
         }
+
+        [Fact]
+        public async Task GetFollowingPostsAsync_ShouldReturn_OwnPosts()
+        {
+            using var fx = new DatabaseFixture();
+            var ctx = fx.Context;
+            var me = new UserBuilder().Build();
+            ctx.Users.Add(me);
+            var myPost = new PostBuilder().WithId(0).WithUserId(me.Id).Build();
+            ctx.Posts.Add(myPost);
+            await ctx.SaveChangesAsync();
+
+            var queries = new PostQueries(ctx);
+            var result = await queries.GetFollowingPostsAsync(me.Id, 1, 10);
+
+            result.Should().ContainSingle();
+            result[0].Id.Should().Be(myPost.Id);
+        }
+
+        [Fact]
+        public async Task GetFollowingPostsAsync_ShouldReturn_PostsFromFollowedUsers()
+        {
+            using var fx = new DatabaseFixture();
+            var ctx = fx.Context;
+            var me = new UserBuilder().Build();
+            var followed = new UserBuilder().Build();
+            var stranger = new UserBuilder().Build();
+            ctx.Users.AddRange(me, followed, stranger);
+            ctx.Follows.Add(Follow.Create(me.Id, followed.Id));
+            var followedPost = new PostBuilder().WithId(0).WithUserId(followed.Id).Build();
+            var strangerPost = new PostBuilder().WithId(0).WithUserId(stranger.Id).Build();
+            ctx.Posts.AddRange(followedPost, strangerPost);
+            await ctx.SaveChangesAsync();
+
+            var queries = new PostQueries(ctx);
+            var result = await queries.GetFollowingPostsAsync(me.Id, 1, 10);
+
+            result.Should().ContainSingle();
+            result[0].Id.Should().Be(followedPost.Id);
+        }
+
+        [Fact]
+        public async Task GetFollowingPostsAsync_ShouldReturn_OwnAndFollowedPosts_Together()
+        {
+            using var fx = new DatabaseFixture();
+            var ctx = fx.Context;
+            var me = new UserBuilder().Build();
+            var followed = new UserBuilder().Build();
+            ctx.Users.AddRange(me, followed);
+            ctx.Follows.Add(Follow.Create(me.Id, followed.Id));
+            var myPost = new PostBuilder().WithId(0).WithUserId(me.Id).Build();
+            var followedPost = new PostBuilder().WithId(0).WithUserId(followed.Id).Build();
+            ctx.Posts.AddRange(myPost, followedPost);
+            await ctx.SaveChangesAsync();
+
+            var queries = new PostQueries(ctx);
+            var result = await queries.GetFollowingPostsAsync(me.Id, 1, 10);
+
+            result.Should().HaveCount(2);
+            result.Select(p => p.Id).Should().Contain([myPost.Id, followedPost.Id]);
+        }
+
+        [Fact]
+        public async Task CountFollowingPostsAsync_ShouldCount_OwnAndFollowedPosts()
+        {
+            using var fx = new DatabaseFixture();
+            var ctx = fx.Context;
+            var me = new UserBuilder().Build();
+            var followed = new UserBuilder().Build();
+            var stranger = new UserBuilder().Build();
+            ctx.Users.AddRange(me, followed, stranger);
+            ctx.Follows.Add(Follow.Create(me.Id, followed.Id));
+            ctx.Posts.AddRange(
+                new PostBuilder().WithId(0).WithUserId(me.Id).Build(),
+                new PostBuilder().WithId(0).WithUserId(followed.Id).Build(),
+                new PostBuilder().WithId(0).WithUserId(stranger.Id).Build());
+            await ctx.SaveChangesAsync();
+
+            var queries = new PostQueries(ctx);
+            (await queries.CountFollowingPostsAsync(me.Id)).Should().Be(2);
+        }
     }
 }

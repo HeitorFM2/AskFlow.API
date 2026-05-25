@@ -44,6 +44,8 @@ namespace AskFlow.Application.Common
         public const string CommentContentMaxLength = "COMMENT_CONTENT_MAX_LENGTH";
 
         public const string UserNotFound = "USER_NOT_FOUND";
+        public const string UserNameTaken = "USERNAME_TAKEN";
+        public const string IdentificationTaken = "IDENTIFICATION_TAKEN";
 
         public const string FollowCannotFollowSelf = "FOLLOW_CANNOT_FOLLOW_SELF";
         public const string AvatarRequired = "AVATAR_REQUIRED";

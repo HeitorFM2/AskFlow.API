@@ -468,5 +468,50 @@ namespace AskFlow.Tests.Infrastructure.Repositories
 
             result.Should().BeEmpty();
         }
+
+        // --- IsFollowingAsync ---
+
+        [Fact]
+        public async Task IsFollowingAsync_ShouldReturnTrue_WhenFollowExists()
+        {
+            using var fx = new DatabaseFixture();
+            var (ctx, follower, followed) = await SeedWithFollowAsync(fx);
+            var queries = new FollowQueries(ctx);
+
+            var result = await queries.IsFollowingAsync(follower.Id, followed.UserName!);
+
+            result.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task IsFollowingAsync_ShouldReturnFalse_WhenFollowDoesNotExist()
+        {
+            using var fx = new DatabaseFixture();
+            var (ctx, follower, followed) = await SeedUsersAsync(fx);
+            var queries = new FollowQueries(ctx);
+
+            var result = await queries.IsFollowingAsync(follower.Id, followed.UserName!);
+
+            result.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task IsFollowingAsync_ShouldReturnFalse_WhenFollowBelongsToAnotherUser()
+        {
+            using var fx = new DatabaseFixture();
+            var ctx = fx.Context;
+            var follower = new UserBuilder().Build();
+            var followed = new UserBuilder().Build();
+            var otherUser = new UserBuilder().Build();
+            ctx.Users.AddRange(follower, followed, otherUser);
+            await ctx.SaveChangesAsync();
+            ctx.Follows.Add(Follow.Create(otherUser.Id, followed.Id));
+            await ctx.SaveChangesAsync();
+            var queries = new FollowQueries(ctx);
+
+            var result = await queries.IsFollowingAsync(follower.Id, followed.UserName!);
+
+            result.Should().BeFalse();
+        }
     }
 }

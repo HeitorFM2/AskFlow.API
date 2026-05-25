@@ -5,5 +5,6 @@ namespace AskFlow.Application.Interfaces
     public interface IUserQueries
     {
         Task<IReadOnlyList<UserDto>> GetAllAsync(string excludeUserId, string? search = null, CancellationToken cancellationToken = default);
+        Task<bool> IsIdentificationTakenAsync(string identification, string excludeUserId, CancellationToken cancellationToken = default);
     }
 }

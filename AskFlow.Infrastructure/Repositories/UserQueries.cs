@@ -9,6 +9,11 @@ namespace AskFlow.Infrastructure.Repositories
     {
         private readonly AppDbContext _context = context;
 
+        public Task<bool> IsIdentificationTakenAsync(string identification, string excludeUserId, CancellationToken cancellationToken = default)
+        {
+            return _context.Users.AnyAsync(u => u.Identification == identification && u.Id != excludeUserId, cancellationToken);
+        }
+
         public async Task<IReadOnlyList<UserDto>> GetAllAsync(
             string excludeUserId,
             string? search = null,

@@ -18,12 +18,6 @@ namespace AskFlow.Tests.Common.Builders
             _expiresAt = DateTime.UtcNow.AddDays(7);
         }
 
-        public RefreshTokenBuilder WithToken(string token)
-        {
-            _token = token;
-            return this;
-        }
-
         public RefreshTokenBuilder WithUser(User user)
         {
             _user = user;

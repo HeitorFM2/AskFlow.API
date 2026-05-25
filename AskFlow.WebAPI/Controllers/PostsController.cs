@@ -31,6 +31,13 @@ namespace AskFlow.WebAPI.Controllers
             return result.ToActionResult(this);
         }
 
+        [HttpGet("Following")]
+        public async Task<IActionResult> GetFollowingPosts([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+        {
+            var result = await _mediator.Send(new GetFollowingPostsQuery(page, pageSize));
+            return result.ToActionResult(this);
+        }
+
         [HttpGet("Me")]
         public async Task<IActionResult> GetMyPosts([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {

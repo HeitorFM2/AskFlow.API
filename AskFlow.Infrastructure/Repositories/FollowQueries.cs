@@ -60,6 +60,13 @@ namespace AskFlow.Infrastructure.Repositories
                 && (search == null || f.Followed.UserName!.Contains(search) || f.Followed.Identification.Contains(search)), cancellationToken);
         }
 
+        public Task<bool> IsFollowingAsync(string followerId, string targetUserName, CancellationToken cancellationToken = default)
+        {
+            return _context.Follows
+                .AsNoTracking()
+                .AnyAsync(f => f.FollowerId == followerId && f.Followed.UserName == targetUserName, cancellationToken);
+        }
+
         public async Task<HashSet<string>> GetFollowedUserNamesAsync(
             string followerId,
             IEnumerable<string> userNames,
