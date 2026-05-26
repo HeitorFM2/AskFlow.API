@@ -35,6 +35,20 @@ namespace AskFlow.WebAPI.Controllers
             return result.ToActionResult(this);
         }
 
+        [HttpPost("ForgotPassword")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordCommand command)
+        {
+            var result = await _mediator.Send(command);
+            return result.ToActionResult(this);
+        }
+
+        [HttpPost("ResetPassword")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordCommand command)
+        {
+            var result = await _mediator.Send(command);
+            return result.ToActionResult(this);
+        }
+
         [Authorize]
         [HttpPost("Logout")]
         public async Task<IActionResult> Logout()
