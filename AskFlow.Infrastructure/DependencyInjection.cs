@@ -33,10 +33,14 @@ namespace AskFlow.Infrastructure
             services.Configure<BlobStorageSettings>(
                 configuration.GetSection("BlobStorage"));
 
+            services.Configure<SendGridSettings>(
+                configuration.GetSection("SendGrid"));
+
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddScoped<IPasswordSignInService, IdentityPasswordSignInService>();
             services.AddScoped<ITokenService, TokenService>();
+            services.AddScoped<IEmailService, SendGridEmailService>();
             services.AddScoped<IAvatarStorage, AzureBlobAvatarStorage>();
             services.AddSingleton<IImageProcessor, ImageSharpAvatarProcessor>();
 
