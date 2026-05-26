@@ -15,6 +15,7 @@ namespace AskFlow.Application.Common
         public const string AuthRefreshTokenExpiredOrRevoked = "AUTH_REFRESH_TOKEN_EXPIRED_OR_REVOKED";
         public const string AuthRefreshTokenReuseDetected = "AUTH_REFRESH_TOKEN_REUSE_DETECTED";
         public const string AuthIdentityFailure = "AUTH_IDENTITY_FAILURE";
+        public const string AuthResetTokenInvalid = "AUTH_RESET_TOKEN_INVALID";
 
         public const string PostNotFound = "POST_NOT_FOUND";
         public const string PostNoPermissionToDelete = "POST_NO_PERMISSION_TO_DELETE";
@@ -35,6 +36,9 @@ namespace AskFlow.Application.Common
         public const string IdentificationRequired = "IDENTIFICATION_REQUIRED";
         public const string IdentificationMaxLength = "IDENTIFICATION_MAX_LENGTH";
         public const string RefreshTokenRequired = "REFRESH_TOKEN_REQUIRED";
+        public const string ResetTokenRequired = "RESET_TOKEN_REQUIRED";
+        public const string PasswordConfirmRequired = "PASSWORD_CONFIRM_REQUIRED";
+        public const string PasswordConfirmMismatch = "PASSWORD_CONFIRM_MISMATCH";
 
         public const string PostContentRequired = "POST_CONTENT_REQUIRED";
         public const string PostContentMaxLength = "POST_CONTENT_MAX_LENGTH";
